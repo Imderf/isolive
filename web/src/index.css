@@ -1,0 +1,112 @@
+/* Ogilvy Design System: solo rojo, negro, grises y blanco; esquinas rectas; hairlines; sin degradados ni blur. */
+@font-face { font-family: 'Ogilvy Sans'; src: url('/fonts/ogilvy-sans-300.otf') format('opentype'); font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Ogilvy Sans'; src: url('/fonts/ogilvy-sans-400.otf') format('opentype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Ogilvy Sans'; src: url('/fonts/ogilvy-sans-700.otf') format('opentype'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Ogilvy Serif'; src: url('/fonts/ogilvy-serif-400.otf') format('opentype'); font-weight: 400; font-display: swap; }
+
+:root {
+  --og-red: #EF3B3A; --og-red-ink: #D42E2D; --og-black: #0A0A0A; --og-white: #FFFFFF;
+  --g900: #1A1A1A; --g700: #4D4D4D; --g500: #8C8C8C; --g300: #C7C7C7; --g150: #E4E4E4; --g050: #F4F4F4;
+  --sans: 'Ogilvy Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --serif: 'Ogilvy Serif', Georgia, serif;
+  --ease: cubic-bezier(.2, .6, .2, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body { font-family: var(--sans); color: var(--og-black); background: var(--g050); -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--og-red); outline-offset: 2px; }
+
+.scene { position: fixed !important; inset: 0; }
+.etiquetas { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+.ui { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+.ui > * { pointer-events: auto; }
+
+.card { position: fixed; background: var(--og-white); border: 1px solid var(--og-black); }
+.kicker { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--g700); }
+.kicker b { color: var(--og-red); font-weight: 700; }
+.kicker.sub { margin: 18px 0 8px; padding-top: 12px; border-top: 1px solid var(--g150); }
+
+/* Barra superior */
+.top { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; gap: 24px; padding: 0 20px; background: var(--og-white); border-bottom: 1px solid var(--og-black); font-size: 14px; }
+.brand { display: flex; align-items: baseline; gap: 8px; }
+.brand img { height: 24px; display: block; }
+.brand span { font-weight: 300; font-size: 20px; letter-spacing: .02em; }
+.area { font-weight: 700; padding-left: 24px; border-left: 1px solid var(--g300); }
+.area span { font-weight: 300; color: var(--g700); }
+.vivo { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.vivo i { width: 8px; height: 8px; border-radius: 50%; background: var(--og-red); animation: pulso 1.6s var(--ease) infinite; }
+@keyframes pulso { 50% { opacity: .25; } }
+.mock { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid var(--og-red); color: var(--og-red); padding: 3px 8px; }
+.user { font-weight: 700; } .user span { font-weight: 300; color: var(--g700); margin-left: 6px; }
+
+/* Indicadores */
+.kpis { position: fixed; top: 72px; left: 16px; display: flex; gap: 8px; }
+.kpi { position: static; width: 132px; padding: 10px 12px 8px; }
+.kpi b { display: block; font-family: var(--serif); font-weight: 400; font-size: 30px; line-height: 1; }
+.kpi span { display: block; margin-top: 6px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--g700); }
+.kpi.alerta { border-top: 4px solid var(--og-red); }
+.kpi.alerta b { color: var(--og-red); }
+
+/* Ficha */
+.ficha { top: 72px; right: 16px; width: 320px; max-height: calc(100vh - 72px - 300px); overflow: auto; padding: 16px 18px 18px; }
+.ficha h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; line-height: 1.15; margin: 6px 0 6px; }
+.ficha .perfil { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--g700); }
+.ficha dl { display: grid; grid-template-columns: 96px 1fr; gap: 8px 10px; margin-top: 14px; font-size: 13px; }
+.ficha dt { color: var(--g700); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding-top: 2px; }
+.ficha .grande b { font-family: var(--serif); font-size: 40px; font-weight: 400; }
+.cerrar { position: absolute; top: 12px; right: 12px; background: none; border: 0; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--g700); }
+.cerrar:hover { color: var(--og-red); }
+.piezas, .equipo, .leyenda, .mini, .feed ul { list-style: none; }
+.piezas li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--g150); font-size: 13px; cursor: pointer; }
+.piezas li:hover { color: var(--og-red); }
+.piezas li > i { flex: none; width: 10px; height: 10px; border: 1px solid var(--og-black); }
+.piezas li span:first-of-type { flex: 1; }
+.piezas small { display: block; color: var(--g700); font-size: 11px; }
+.equipo li { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; }
+.equipo b { margin-left: auto; }
+.leyenda li { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; color: var(--g700); }
+.mini li { font-size: 12px; color: var(--g700); padding: 3px 0; }
+.tag { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 2px 6px; }
+.tag.vencida { background: var(--og-red); color: var(--og-white); }
+.tag.urgente { border: 1px solid var(--og-red); color: var(--og-red); }
+
+/* Formas de marca (perfil y leyenda) */
+.forma { flex: none; display: inline-block; width: 12px; height: 12px; border: 1px solid var(--og-black); }
+.forma-circulo { border-radius: 50%; }
+.forma-medio { height: 7px; border-radius: 12px 12px 0 0; }
+.forma-cuarto { border-top-left-radius: 12px; }
+.forma-anillo { border-radius: 50%; border-width: 3px; }
+.forma-achurado { background: repeating-linear-gradient(45deg, var(--og-black) 0 2px, var(--og-white) 2px 4px); }
+.cubo { flex: none; width: 10px; height: 10px; background: var(--g700); }
+.bola { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--og-red); }
+.anillo-r { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--og-red); }
+
+/* Etapas */
+.etapas { left: 16px; bottom: 16px; right: 352px; padding: 12px 16px 14px; }
+.etapas ol { list-style: none; display: flex; margin-top: 10px; }
+.etapas li { flex: 1; min-width: 0; padding: 6px 8px 4px; border-left: 1px solid var(--g150); cursor: pointer; transition: background .22s var(--ease); }
+.etapas li:first-child { border-left: 0; }
+.etapas li:hover { background: var(--g050); }
+.etapas li.on { box-shadow: inset 0 -3px 0 var(--og-red); }
+.etapas li i { display: block; width: 10px; height: 10px; border: 1px solid var(--og-black); }
+.etapas li b { display: block; font-family: var(--serif); font-weight: 400; font-size: 26px; margin-top: 6px; line-height: 1; }
+.etapas li span { display: block; font-size: 11px; line-height: 1.25; color: var(--g700); margin-top: 4px; overflow-wrap: anywhere; hyphens: auto; }
+.etapas li.arch b { color: var(--g500); }
+
+/* Actividad */
+.feed { right: 16px; bottom: 16px; width: 320px; height: 268px; padding: 12px 16px; display: flex; flex-direction: column; }
+.feed ul { flex: 1; overflow: auto; margin-top: 8px; }
+.feed li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--g150); font-size: 12px; line-height: 1.35; cursor: pointer; }
+.feed li:hover em { color: var(--og-red); }
+.feed time { flex: none; color: var(--og-red); font-weight: 700; }
+.feed em { font-style: normal; color: var(--g700); }
+.nota { font-size: 10px; color: var(--g500); margin-top: 6px; }
+
+/* Etiquetas dentro de la escena */
+.lbl { background: var(--og-white); border: 1px solid var(--og-black); padding: 3px 7px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; cursor: pointer; user-select: none; }
+.lbl-n { color: var(--og-red); font-weight: 700; }
+.lbl-mini { padding: 1px 5px; letter-spacing: 0; }
+.lbl-persona { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 700; text-align: center; }
+.lbl-persona small { display: block; font-weight: 300; font-size: 10px; color: var(--g700); }
