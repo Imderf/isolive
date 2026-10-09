@@ -3,7 +3,7 @@ import type { Area } from '../model.ts'
 // Disposición del área en la oficina genérica (V1): estaciones, a qué etapas responden y puestos.
 // Las piezas sin responsable de la mesa esperan en la bandeja (ancla) de su estación de trabajo.
 // Es lo que se reemplaza con el piso 4 real del Naos en V2 y lo que el panel de administración editará.
-export const disposicion: Pick<Area, 'id' | 'nombre' | 'cliente' | 'estaciones' | 'puestos'> = {
+export const disposicion: Pick<Area, 'id' | 'nombre' | 'cliente' | 'estaciones' | 'puestos' | 'visitas'> = {
   id: 'mesa-social-media',
   nombre: 'Mesa de Social Media',
   cliente: 'Unilever',
@@ -23,5 +23,10 @@ export const disposicion: Pick<Area, 'id' | 'nombre' | 'cliente' | 'estaciones' 
     { id: 'c1', pos: [7.5, -5.2], rot: 0 }, { id: 'c2', pos: [10, -5.2], rot: 0 }, { id: 'c3', pos: [12.5, -5.2], rot: 0 },
     { id: 'k1', pos: [-1.2, 3], rot: 0 }, { id: 'k2', pos: [1.2, 3], rot: 0 },
     { id: 's1', pos: [7, 4], rot: 0 }, { id: 's2', pos: [9, 4], rot: 0 }, { id: 's3', pos: [11, 4], rot: 0 }, { id: 's4', pos: [13, 4], rot: 0 },
+  ],
+  // Dos personas del cliente en la sala: salen bordeando la mesa hacia la puerta (nodo 'cliente').
+  visitas: [
+    { id: 'v1', pos: [-11.2, 3.2], rot: Math.PI, via: [[-7.8, 3.0]] },
+    { id: 'v2', pos: [-8.8, 5.4], rot: 0, via: [[-7.8, 5.6]] },
   ],
 }

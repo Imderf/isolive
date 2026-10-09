@@ -37,9 +37,12 @@ function planAmbiente(): Paso[] {
 
 const girar = (de: number, a: number, k: number) => de + Math.atan2(Math.sin(a - de), Math.cos(a - de)) * k
 
-export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa }: {
+export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa, planes = planAmbiente, cada = [40, 110], camisa: camisaFija, etiqueta, seleccionable = true }: {
   persona: TPersona; puesto: Puesto; i: number; mapa: Mapa; sel: Seleccion | null; onSelect: (s: Seleccion | null) => void
   enEtapa: number // piezas suyas en la etapa elegida (0 si no hay etapa elegida)
+  planes?: () => Paso[] // vida de oficina (por defecto café, baño, estirarse)
+  cada?: [number, number] // segundos entre planes de ambiente
+  camisa?: string; etiqueta?: [string, string]; seleccionable?: boolean // visitantes del cliente
 }) {
   const asiento = `asiento:${puesto.id}`
   const [ax, az] = mapa.nodos.get(asiento)!
@@ -57,7 +60,7 @@ export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa }: {
   const caja = visual.enMano.get(persona.id)
   const dice = visual.burbujas.get(persona.id)?.texto
   const selected = sel?.tipo === 'persona' && sel.id === persona.id
-  const camisa = PERFILES[persona.perfil].color
+  const camisa = camisaFija ?? PERFILES[persona.perfil].color
 
   useFrame(({ clock }, delta) => {
     const dt = Math.min(delta, 0.1)
@@ -78,9 +81,9 @@ export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa }: {
         a.cola = [...orden, { ir: asiento }]
         a.ambiente = false
       } else if ((a.proximo -= dt) <= 0) {
-        a.cola = [...planAmbiente(), { ir: asiento }]
+        a.cola = [...planes(), { ir: asiento }]
         a.ambiente = true
-        a.proximo = 40 + Math.random() * 70
+        a.proximo = cada[0] + Math.random() * (cada[1] - cada[0])
       }
     }
 
@@ -163,7 +166,7 @@ export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa }: {
     <group
       ref={root}
       position={[ax, 0, az]}
-      onClick={e => { e.stopPropagation(); onSelect({ tipo: 'persona', id: persona.id }) }}
+      onClick={e => { e.stopPropagation(); if (seleccionable) onSelect({ tipo: 'persona', id: persona.id }) }}
       onPointerOver={e => { e.stopPropagation(); setHover(true) }}
       onPointerOut={() => setHover(false)}
     >
@@ -177,7 +180,7 @@ export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa }: {
       )}
       {(hover || selected) ? (
         <Html portal={capaEtiquetas} position={[0, 1.9, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="pill pill-oscuro">{persona.nombre}<small>{PERFILES[persona.perfil].nombre}</small></div>
+          <div className="pill pill-oscuro">{etiqueta?.[0] ?? persona.nombre}<small>{etiqueta?.[1] ?? PERFILES[persona.perfil].nombre}</small></div>
         </Html>
       ) : enEtapa > 0 ? (
         <Html portal={capaEtiquetas} position={[0, 1.9, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>

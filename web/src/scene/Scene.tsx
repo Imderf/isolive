@@ -41,7 +41,7 @@ function ControlCamara() {
 // Arrastrar mueve, rueda acerca, clic derecho gira.
 export function Scene(props: Props) {
   const { area } = props
-  const mapa = useMemo(() => construirMapa(area.puestos), [area.puestos])
+  const mapa = useMemo(() => construirMapa(area.puestos, area.visitas), [area.puestos, area.visitas])
   const enEtapa = (id: string) => (props.etapa ? area.piezas.filter(p => p.etapa === props.etapa && p.tiene?.persona === id).length : 0)
   return (
     <Canvas shadows="soft" dpr={[1, 2]} className="scene" onPointerMissed={() => props.onSelect(null)}>
@@ -65,7 +65,7 @@ export function Scene(props: Props) {
       />
       <Office area={area} sel={props.sel} onSelect={props.onSelect} />
       <Trafico />
-      <Visitantes cliente={area.cliente} />
+      <Visitantes area={area} mapa={mapa} />
       <Puestos {...props} />
       <Lugares {...props} />
       <Fantasmas />

@@ -14,6 +14,12 @@ assert.deepEqual(r[0], [-12.5, -1.5])
 assert.ok(r.some(([x, z]) => x === 5 && z === 5.6), 'debe pasar por el cruce sureste')
 assert.deepEqual(r.at(-1), [7, 8.5])
 
+// Visitantes del cliente: salen de la sala bordeando la mesa y llegan al muro Kanban.
+const mv = construirMapa(area.puestos, area.visitas)
+const rv = ruta(mv, 'asiento:v1', 'kanban')
+assert.deepEqual(rv[0], [-7.8, 3.0])
+assert.deepEqual(rv.at(-1), [0, 1.5])
+
 // 500 eventos simulados: nada se pierde ni queda en una etapa que no existe.
 let a = area, creadas = 0
 const total = (x: typeof area) => x.piezas.length + Object.values(x.archivadas).reduce((s, v) => s + v, 0)

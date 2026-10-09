@@ -55,6 +55,9 @@ export interface Evento {
 // Comentario de una tarea, recortado a 280 caracteres y sin enlaces. Nunca se envía a usuarios cliente.
 export interface Comentario { id: string; pieza: string; autor: string; texto: string; menciones: string[]; fecha: string; hora: string }
 
+// Silla de visitante (personas del cliente en la sala): asiento, hacia dónde mira y puntos hasta la puerta de la sala.
+export interface Visita { id: string; pos: XZ; rot: number; via: XZ[] }
+
 export interface Area {
   id: string
   nombre: string
@@ -62,6 +65,7 @@ export interface Area {
   etapas: string[]
   estaciones: Estacion[]
   puestos: Puesto[]
+  visitas?: Visita[]
   personas: Persona[]
   piezas: Pieza[]
   archivadas: Record<string, number> // etapa → cantidad (no se traen una a una)

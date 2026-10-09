@@ -1,11 +1,11 @@
-import type { Puesto, XZ } from '../model.ts'
+import type { Puesto, Visita, XZ } from '../model.ts'
 
 // Red de pasillos de la oficina genérica (V1). Pasillo norte z=-1.5 y sur z=5.6, unidos por x=-5 y x=5.
 // Cada puesto se conecta a su pasillo con una salida; los destinos cuelgan del pasillo con un ramal.
 // Cuando llegue el piso real del Naos (V2), solo cambia este archivo.
 export interface Mapa { nodos: Map<string, XZ>; ady: Map<string, string[]>; mira: Record<string, XZ> }
 
-export function construirMapa(puestos: Puesto[]): Mapa {
+export function construirMapa(puestos: Puesto[], visitas: Visita[] = []): Mapa {
   const nodos = new Map<string, XZ>()
   const ady = new Map<string, string[]>()
   const N = (id: string, x: number, z: number) => { nodos.set(id, [x, z]); return id }
@@ -48,6 +48,12 @@ export function construirMapa(puestos: Puesto[]): Mapa {
   unir('s-archivo', N('archivo', -3, 7.6))
   unir('s-kanban', N('descarte', 0, 7.5))
   unir('s-congelador', N('congelador', 3, 7.6))
+
+  // Sillas de visitantes: del asiento a la puerta de la sala por sus puntos de paso
+  for (const v of visitas) {
+    const ids = [N(`asiento:${v.id}`, ...v.pos), ...v.via.map((p, i) => N(`via:${v.id}:${i}`, ...p)), 'cliente']
+    ids.forEach((id, i) => { if (i) unir(ids[i - 1], id) })
+  }
 
   // Hacia dónde mira la persona al llegar a cada destino
   const mira: Record<string, XZ> = {

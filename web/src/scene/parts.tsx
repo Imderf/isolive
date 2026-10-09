@@ -1,6 +1,7 @@
-import { createRef, useState } from 'react'
+import { createRef, useEffect, useMemo, useState } from 'react'
 import { Html, RoundedBox, useCursor } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
+import { CanvasTexture, SRGBColorSpace } from 'three'
 import type { Pieza } from '../model'
 
 type V3 = [number, number, number]
@@ -88,5 +89,37 @@ export function PiezaMesh({ pieza, p, color, dim, selected, onSelect }: {
         </Html>
       )}
     </group>
+  )
+}
+
+// Texto pintado sobre el piso (nombres de calle). Es una textura en un plano, no HTML:
+// los carros pasan por encima y lo tapan. Se redibuja cuando carga la fuente Geist.
+export function TextoSuelo({ texto, x, y = -0.27, z, rot, alto = 0.9 }: { texto: string; x: number; y?: number; z: number; rot: number; alto?: number }) {
+  const lienzo = useMemo(() => Object.assign(document.createElement('canvas'), { width: 1024, height: 192 }), [])
+  const textura = useMemo(() => { const t = new CanvasTexture(lienzo); t.colorSpace = SRGBColorSpace; t.anisotropy = 8; return t }, [lienzo])
+  useEffect(() => {
+    const dibujar = () => {
+      const ctx = lienzo.getContext('2d')!
+      ctx.clearRect(0, 0, 1024, 192)
+      ctx.font = '600 120px "Geist Variable", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.lineJoin = 'round'
+      ctx.lineWidth = 14
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)'
+      ctx.strokeText(texto, 512, 96)
+      ctx.fillStyle = '#8A93A3'
+      ctx.fillText(texto, 512, 96)
+      textura.needsUpdate = true
+    }
+    dibujar()
+    document.fonts?.ready.then(dibujar)
+  }, [lienzo, textura, texto])
+  useEffect(() => () => textura.dispose(), [textura])
+  return (
+    <mesh position={[x, y, z]} rotation={[-Math.PI / 2, 0, rot]} renderOrder={1}>
+      <planeGeometry args={[alto * (1024 / 192), alto]} />
+      <meshBasicMaterial map={textura} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-2} />
+    </mesh>
   )
 }

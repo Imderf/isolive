@@ -1,6 +1,7 @@
-import { Bath, Coffee, SquareKanban } from 'lucide-react'
+import { Html } from '@react-three/drei'
+import { Bath, Coffee, MapPin, SquareKanban } from 'lucide-react'
 import type { Area, Estacion, Seleccion } from '../model'
-import { Arbol, Box, Marca, RED } from './parts'
+import { Arbol, Box, Marca, RED, TextoSuelo, capaEtiquetas } from './parts'
 
 const W = '#FFFFFF', PAD = '#F7F3F3', G = '#E6E8EE', G2 = '#CBD0DA', SLATE = '#2A303C', ROSA = '#F9C9C9'
 
@@ -19,6 +20,13 @@ export function Office({ area, sel, onSelect }: { area: Area; sel: Seleccion | n
       {Array.from({ length: 52 }, (_, i) => <Box key={`r${i}`} p={[-82 + i * 3.2, -0.28, 13.6]} s={[1.4, 0.01, 0.12]} c={W} r={0} shadow={false} />)}
       {Array.from({ length: 52 }, (_, i) => <Box key={`c${i}`} p={[18.6, -0.28, -82 + i * 3.2]} s={[0.12, 0.01, 1.4]} c={W} r={0} shadow={false} />)}
       {[-12, -6, 0, 6, 12].map(x => <Arbol key={`ta${x}`} p={[x, -0.3, 11.6]} s={1.3} />)}
+      {/* Nombres de calle sutiles, como en Google Maps: Av. Carrera 9 (principal) y Calle 102 (alterna) */}
+      <TextoSuelo texto="Av. Carrera 9" x={-7} z={13.6} rot={0} />
+      <TextoSuelo texto="Av. Carrera 9" x={11} z={13.6} rot={0} />
+      <TextoSuelo texto="Calle 102" x={18.6} z={-5} rot={Math.PI / 2} />
+      <Html portal={capaEtiquetas} position={[-2.6, 0, 11.3]} zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
+        <div className="direccion"><MapPin /><span>Naos<small>Av. Carrera 9 #101-67</small></span></div>
+      </Html>
       {[-8, -2, 4, 10].map(z => <Arbol key={`tb${z}`} p={[16.6, -0.3, z]} s={1.3} />)}
 
       {/* Losa del piso */}
