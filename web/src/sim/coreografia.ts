@@ -11,7 +11,9 @@ const ALTURA: Record<string, number> = { cliente: 0.5, archivo: 0.56, descarte: 
 function lugarDe(a: Area, p: Pieza): { nodo: string; pos: V3; color: string } {
   const est = estacionDe(a, p.etapa)
   if (est.tipo === 'lugar') return { nodo: est.id, pos: [est.ancla[0], ALTURA[est.id] ?? 0.5, est.ancla[1]], color: est.color }
-  const pu = a.puestos.find(x => x.id === a.personas.find(y => y.id === p.asignados[0])!.puesto)!
+  const persona = a.personas.find(y => y.id === p.asignados[0])
+  if (!persona) return { nodo: `bandeja:${est.id}`, pos: [est.ancla[0], 0.56, est.ancla[1]], color: est.color }
+  const pu = a.puestos.find(x => x.id === persona.puesto)!
   return { nodo: `asiento:${pu.id}`, pos: [pu.pos[0] - 0.4, 0.85, pu.pos[1] + 0.12], color: est.color }
 }
 
@@ -28,7 +30,7 @@ export function coreografiar(antes: Area, despues: Area, ev: Evento) {
   const est = estacionDe(despues, ev.hasta)
   const origen = lugarDe(antes, p0)
   const destino = p1 ? lugarDe(despues, p1) : { nodo: est.id, color: est.color }
-  const cargador = (ev.asignados ?? p0.asignados)[0]
+  const cargador = (ev.asignados ?? p0.asignados).find(id => despues.personas.some(x => x.id === id)) ?? ev.actor
 
   if (origen.nodo === destino.nodo) burbuja(cargador, `→ ${ev.hasta}`)
   else {

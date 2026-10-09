@@ -2,13 +2,18 @@ import { useEffect, useState } from 'react'
 import { Activity, AlertTriangle, Check, ChevronDown, Hourglass, LayoutGrid, MapPin, Minus, Package, Plus, RotateCcw, Search, Users, X } from 'lucide-react'
 import { PERFILES, estacionDe, personaDe, type Area, type Evento, type Perfil, type Pieza } from '../model'
 import { moverCamara } from '../scene/Scene'
-import { enHorario, horaTexto } from '../sim/horario'
+import { enHorario, fechaHoy, horaTexto } from '../sim/horario'
+import type { Modo } from '../App'
 import type { Props } from '../scene/Puestos'
 
 const iniciales = (n: string) => n.split(' ').slice(0, 2).map(x => x[0]).join('')
 const ESTADO = { vencida: ['Vencida', 'rojo'], urgente: ['Por vencer', 'ambar'], normal: ['A tiempo', 'verde'] } as const
 
-type OProps = Props & { onEtapa: (e: string | null) => void }
+type OProps = Props & { onEtapa: (e: string | null) => void; modo: Modo }
+
+const deHoy = (ev: Evento) => !ev.fecha || ev.fecha === fechaHoy()
+// Hoy se ve la hora; días anteriores, la fecha (DD/MM).
+const cuando = (ev: Evento) => (deHoy(ev) ? ev.hora : `${ev.fecha!.slice(8)}/${ev.fecha!.slice(5, 7)}`)
 
 export function Overlay(props: OProps) {
   const { area } = props
@@ -20,7 +25,7 @@ export function Overlay(props: OProps) {
         <Kpi icon={<Package />} n={area.piezas.length} t="Piezas activas" sub={`en ${area.estaciones.filter(e => e.tipo === 'trabajo').length} estaciones`} />
         <Kpi icon={<Hourglass />} n={area.piezas.filter(p => p.etapa === 'Validación Cliente').length} t="Con el cliente" sub="esperando validación" tono="ambar" />
         <Kpi icon={<AlertTriangle />} n={vencidas} t="Vencidas" sub={`${area.piezas.filter(p => p.estado === 'urgente').length} por vencer`} tono="rojo" />
-        <Kpi icon={<Activity />} n={area.eventos.length} t="Eventos hoy" sub="en el tablero" tono="verde" />
+        <Kpi icon={<Activity />} n={area.eventos.filter(deHoy).length} t="Eventos hoy" sub="en el tablero" tono="verde" />
       </section>
       <div className="mapa-ctrl card">
         <button title="Acercar" onClick={() => moverCamara('acercar')}><Plus /></button>
@@ -34,7 +39,7 @@ export function Overlay(props: OProps) {
   )
 }
 
-function Barra({ area, onSelect }: OProps) {
+function Barra({ area, onSelect, modo }: OProps) {
   const [reloj, setReloj] = useState(horaTexto)
   const [q, setQ] = useState('')
   useEffect(() => { const t = setInterval(() => setReloj(horaTexto()), 20_000); return () => clearInterval(t) }, [])
@@ -61,7 +66,7 @@ function Barra({ area, onSelect }: OProps) {
         </button>
         <span className="tag verde"><i className="punto" />En vivo · {reloj}</span>
         {!enHorario() && <span className="tag gris">Fuera de horario · puestos vacíos</span>}
-        <span className="tag ambar">Datos de prueba · simulación</span>
+        {modo === 'prueba' ? <span className="tag ambar">Datos de prueba · simulación</span> : <span className="tag gris">TaskBoard · Social First</span>}
         <div className="user"><span className="avatar">IR</span><span><b>Imderf Ríos</b><small>Coordinación general</small></span></div>
       </div>
     </header>
@@ -94,7 +99,8 @@ function Barrita({ v, max, tono = 'rojo' }: { v: number; max: number; tono?: str
   return <span className="barrita"><i className={tono} style={{ width: `${Math.min(100, (v / Math.max(max, 1)) * 100)}%` }} /></span>
 }
 
-function Ficha({ area, sel, onSelect }: OProps) {
+function Ficha(props: OProps) {
+  const { area, sel, onSelect } = props
   const cerrar = () => onSelect(null)
   const carga = (id: string) => area.piezas.filter(x => x.asignados.includes(id)).length
   const maxCarga = Math.max(...area.personas.map(p => carga(p.id)))
@@ -109,7 +115,7 @@ function Ficha({ area, sel, onSelect }: OProps) {
         <ul className="filas">
           {perfiles.map(pf => {
             const n = area.personas.filter(p => p.perfil === pf).length
-            const piezas = area.piezas.filter(x => personaDe(area, x.asignados[0]).perfil === pf).length
+            const piezas = area.piezas.filter(x => personaDe(area, x.asignados[0])?.perfil === pf).length
             return (
               <li key={pf}><i className="dot" style={{ background: PERFILES[pf].color }} /><span className="grow">{PERFILES[pf].nombre} <small>{n}</small></span><Barrita v={piezas} max={area.piezas.length / 2} /><b>{piezas}</b></li>
             )
@@ -128,6 +134,7 @@ function Ficha({ area, sel, onSelect }: OProps) {
 
   if (sel.tipo === 'persona') {
     const p = personaDe(area, sel.id)
+    if (!p) return <Ficha {...props} sel={null} />
     const suyas = area.piezas.filter(x => x.asignados.includes(p.id))
     const venc = suyas.filter(x => x.estado === 'vencida').length
     return (
@@ -146,7 +153,7 @@ function Ficha({ area, sel, onSelect }: OProps) {
 
   if (sel.tipo === 'pieza') {
     const p = area.piezas.find(x => x.id === sel.id)
-    if (!p) return <Ficha area={area} sel={null} onSelect={onSelect} onEtapa={() => {}} etapa={null} /> // ya se archivó
+    if (!p) return <Ficha {...props} sel={null} /> // ya se archivó
     const est = estacionDe(area, p.etapa)
     const eventos = area.eventos.filter(e => e.pieza === p.id)
     const [txt, tono] = ESTADO[p.estado]
@@ -155,13 +162,13 @@ function Ficha({ area, sel, onSelect }: OProps) {
         <Cabecera icon={<Package />} kicker={`Pieza · ${est.nombre}`} titulo={p.titulo} onClose={cerrar} />
         <div className="tags"><span className="tag" style={{ background: est.color, color: '#fff' }}>{p.etapa}</span><span className={`tag ${tono}`}>{txt}</span></div>
         <dl>
-          <dt>Responsables</dt><dd>{p.asignados.map(id => personaDe(area, id).nombre).join(', ')}</dd>
-          <dt>Fecha límite</dt><dd>{p.vence}</dd>
+          <dt>Responsables</dt><dd>{p.asignados.map(id => personaDe(area, id)?.nombre).filter(Boolean).join(', ') || 'Sin responsable en la mesa'}</dd>
+          <dt>Fecha límite</dt><dd>{p.vence || 'Sin fecha'}</dd>
           <dt>Estación</dt><dd>{est.nombre}</dd>
         </dl>
         {eventos.length > 0 && <>
           <h3>Actividad</h3>
-          <ul className="filas">{eventos.map(e => <li key={e.id}><span className="hora">{e.hora}</span><span className="grow">{personaDe(area, e.actor).nombre} {accion(e)}</span></li>)}</ul>
+          <ul className="filas">{eventos.map(e => <li key={e.id}><span className="hora">{cuando(e)}</span><span className="grow">{personaDe(area, e.actor)?.nombre ?? 'Alguien'} {accion(e)}</span></li>)}</ul>
         </>}
       </aside>
     )
@@ -246,10 +253,10 @@ function Listas({ area, onSelect }: OProps) {
       </div>
       <ul className="filas scroll">
         {tab === 'actividad' && area.eventos.map(ev => {
-          const actor = personaDe(area, ev.actor)
+          const actor = personaDe(area, ev.actor) ?? { nombre: 'Alguien', perfil: 'data' as const }
           return (
             <li key={ev.id} className="clic" onClick={() => onSelect({ tipo: 'pieza', id: ev.pieza })}>
-              <span className="hora">{ev.hora}</span>
+              <span className="hora">{cuando(ev)}</span>
               <span className="avatar sm" style={{ background: PERFILES[actor.perfil].color }}>{iniciales(actor.nombre)}</span>
               <span className="grow"><b>{actor.nombre}</b> {accion(ev)}<small>{ev.titulo}</small></span>
             </li>

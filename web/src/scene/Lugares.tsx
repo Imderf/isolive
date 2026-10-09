@@ -1,6 +1,6 @@
 import { estacionDe } from '../model'
 import { useVisual, visual } from '../sim/visual'
-import { PiezaMesh, Pin, RED } from './parts'
+import { Box, PiezaMesh, Pin, RED } from './parts'
 import type { Props } from './Puestos'
 
 const ALTURA = { cliente: 0.44, archivo: 0.5, descarte: 0.82, congelador: 1.95 } as Record<string, number>
@@ -9,8 +9,27 @@ const ALTURA = { cliente: 0.44, archivo: 0.5, descarte: 0.82, congelador: 1.95 }
 export function Lugares({ area, sel, onSelect, etapa }: Props) {
   useVisual()
   const lugares = area.estaciones.filter(e => e.tipo === 'lugar')
+  const enMesa = new Set(area.personas.map(p => p.id))
   return (
     <>
+      {/* Bandejas: piezas de estaciones de trabajo sin responsable de la mesa */}
+      {area.estaciones.filter(e => e.tipo === 'trabajo').map(e => {
+        const sueltas = area.piezas.filter(p => e.etapas.includes(p.etapa) && !enMesa.has(p.asignados[0]) && !visual.ocultas.has(p.id))
+        return (
+          <group key={e.id}>
+            <Box p={[e.ancla[0], 0.25, e.ancla[1]]} s={[1.6, 0.5, 0.6]} c="#FFFFFF" />
+            {sueltas.map((p, j) => (
+              <PiezaMesh
+                key={p.id} pieza={p} color={e.color}
+                p={[e.ancla[0] - 0.65 + (j % 8) * 0.19, 0.57 + Math.floor(j / 8) * 0.14, e.ancla[1] + 0.05]}
+                dim={etapa !== null && etapa !== p.etapa}
+                selected={sel?.tipo === 'pieza' && sel.id === p.id}
+                onSelect={id => onSelect({ tipo: 'pieza', id })}
+              />
+            ))}
+          </group>
+        )
+      })}
       {lugares.map(e => {
         const [ax, az] = e.ancla
         const y = ALTURA[e.id] ?? 0.1

@@ -29,6 +29,7 @@ export interface Pieza {
 
 export interface Evento {
   id: string
+  fecha?: string // YYYY-MM-DD en Bogotá; sin fecha = hoy
   hora: string
   tipo: 'movida' | 'comentario' | 'creada' | 'asignada'
   actor: string // quien hizo el cambio en la plataforma
@@ -53,6 +54,9 @@ export interface Area {
   eventos: Evento[]
 }
 
+// Lo que entrega un conector (servidor); la disposición 3D la pone el web.
+export type DatosArea = Pick<Area, 'etapas' | 'personas' | 'piezas' | 'archivadas' | 'eventos'>
+
 export type Seleccion = { tipo: 'persona' | 'pieza' | 'estacion'; id: string }
 
 // Estilo WareTrack con el rojo Ogilvy (#EF3B3A) en el papel del azul: familia de rojos + neutros fríos.
@@ -66,4 +70,5 @@ export const PERFILES: Record<Perfil, { nombre: string; color: string }> = {
 }
 
 export const estacionDe = (a: Area, etapa: string) => a.estaciones.find(e => e.etapas.includes(etapa))!
-export const personaDe = (a: Area, id: string) => a.personas.find(p => p.id === id)!
+// Puede no existir: piezas sin responsable de la mesa o personas que salieron del área.
+export const personaDe = (a: Area, id: string | undefined): Persona | undefined => a.personas.find(p => p.id === id)

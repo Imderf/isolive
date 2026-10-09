@@ -1,0 +1,21 @@
+{
+  "id": "mesa-social-media",
+  "conector": { "tipo": "taskboard", "proyecto": "cmtvoi5if000fs62hcefp84xk" },
+  "archivo": ["Finalizado", "No Aprobado", "Freezing"],
+  "personas": [
+    { "id": "cmtvo2esm0004s62hiztssb14", "perfil": "coordinacion", "puesto": "k1" },
+    { "id": "cmtvxdrbd007es69nofv7d6b9", "perfil": "coordinacion", "puesto": "k2" },
+    { "id": "cmtvogzjr000bs62h30zf84ns", "perfil": "estrategia", "puesto": "e1" },
+    { "id": "cmuen9bf502e5s6qw0c3pkcd1", "perfil": "estrategia", "puesto": "e2" },
+    { "id": "cmtvq6cnb006gs62hfnxgpbzc", "perfil": "diseno", "puesto": "c1" },
+    { "id": "cmtvq48gf0066s62h6uh6r4xd", "perfil": "diseno", "puesto": "c2" },
+    { "id": "cmtvq5jod006bs62hqbqdybso", "perfil": "copy", "puesto": "c3" },
+    { "id": "cmtvq3fb80063s62hkmeslv0i", "perfil": "social", "puesto": "s1", "nombre": "Liliana Gómez" },
+    { "id": "cmtw5ezux006js6go45mclgnf", "perfil": "social", "puesto": "s2" },
+    { "id": "cmtvygik000aus69n3ntwlnk1", "perfil": "social", "puesto": "s3" },
+    { "id": "cmtxfd5qc0000s6dxn8npwivc", "perfil": "social", "puesto": "s4" },
+    { "id": "cmtvq8ip30076s62hghnfyvud", "perfil": "data", "puesto": "d1", "nombre": "Santiago Rondán" },
+    { "id": "cmtvq8dr9006zs62hyhddealw", "perfil": "data", "puesto": "d2", "nombre": "Sebastián Vargas" },
+    { "id": "cmuelm72c02djs6qwdt12bzrx", "perfil": "data", "puesto": "d3" }
+  ]
+}

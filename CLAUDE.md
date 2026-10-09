@@ -7,7 +7,8 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 ## Estructura
 
 - `web/` — React 19 + Vite + React Three Fiber. Escena y overlay.
-- `server/` — (ciclo 3+) Node 24 + Express + Prisma + SQLite: login, roles, conectores, filtro de privacidad, SSE.
+- `server/` — Node 24 + Express, corre el `.ts` directo (sin compilar). Guarda la llave del TaskBoard y traduce cada plataforma al modelo común (`src/taskboard.ts`). Áreas en `server/areas/*.json` (proyecto, columnas de archivo, persona → perfil + puesto). Login, roles, filtro de privacidad y SSE llegan en los ciclos 4–5.
+- `web/src/areas/*.ts` — disposición 3D de cada área (estaciones, etapas, puestos, bandejas).
 - `docs/areas/` — una ficha por área. `docs/referencias/` — WareTrack, Gather, Naos.
 
 ## Modelo común (`web/src/model.ts`)
@@ -39,6 +40,10 @@ Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogi
 
 ## Comandos
 
+- Desarrollo con datos reales: API del management en el worktree `~/Downloads/Ogilvy/management/repo-live` (rama `ogilvy-live`, puerto 4001, copia de producción `dev.db`) → `cd server && npm run dev` (4100) → `cd web && npm run dev` (5180, `/api` va a 4100). Configs `taskboard-live-api`, `ogilvy-live-server`, `ogilvy-live` en el `.claude/launch.json` del vault.
+- Sin el servidor, el web cae a datos de prueba con simulador.
+- `server/.env` (no se versiona): `PORT`, `TASKBOARD_URL`, `TASKBOARD_TOKEN`. Nunca mostrarlo.
+- `cd server && npm run check` — chequeo del conector; `npx tsc --noEmit` — tipos.
 - `cd web && npm run dev` — desarrollo (puerto 5180).
 - `cd web && npm run build` — chequeo de tipos + build.
 - `cd web && npm run check` — chequeo de rutas y eventos (Node, sin dependencias).
@@ -52,4 +57,7 @@ Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogi
   - `web/src/sim/eventos.ts`: `aplicar(area, evento)` es lo único que cambia datos; el simulador de prueba y el conector real (ciclo 3) entregan eventos con la misma forma.
   - `web/src/sim/coreografia.ts`: evento → órdenes (llevar pieza, ir al Kanban, burbuja). Las órdenes mandan sobre la vida de oficina (`scene/Persona.tsx`).
   - Simulador activo solo con datos de prueba (`App.tsx`), un evento cada 12–22 s.
+- Ciclo 3 (conector TaskBoard): hecho 2026-10-09 en local contra la copia de producción.
+  - Management, rama `ogilvy-live` (worktree): `GET /api/live/projects/:id/state` y `/activity?since=`, con llave `LIVE_TOKEN` (Bearer, comparación en tiempo constante), solo proyectos de `LIVE_PROJECTS`, 60 consultas/min. Sin llave responden 404. No devuelven descripciones, comentarios, adjuntos ni correos. **No está desplegado.**
+  - Piezas sin responsable de la mesa (13 de 45 en Social First) esperan en la bandeja de su estación.
 - Bundle de producción: 1,2 MB (330 KB gzip), casi todo Three.js. Revisar en el paso 9 (rendimiento).

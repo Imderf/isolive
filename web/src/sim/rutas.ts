@@ -15,7 +15,10 @@ export function construirMapa(puestos: Puesto[]): Mapa {
     ady.get(a)!.push(b); ady.get(b)!.push(a)
   }
 
-  const norte = [N('n-w', -13, -1.5), N('n-a', -5, -1.5), N('n-datos', -8.75, -1.5), N('n-b', 5, -1.5), N('n-e', 14, -1.5)]
+  const norte = [
+    N('n-w', -13, -1.5), N('n-datos', -8.75, -1.5), N('n-a', -5, -1.5), N('n-estrategia', 0, -1.5),
+    N('n-b', 5, -1.5), N('n-creativo', 8.75, -1.5), N('n-e', 14, -1.5),
+  ]
   const sur = [
     N('s-a', -5, 5.6), N('s-archivo', -3, 5.6), N('s-kanban', 0, 5.6), N('s-congelador', 3, 5.6), N('s-b', 5, 5.6),
     N('s-cafe', 7, 5.6), N('s-pantalla', 10, 5.6), N('s-banos', 12.25, 5.6), N('s-e', 14, 5.6),
@@ -32,7 +35,11 @@ export function construirMapa(puestos: Puesto[]): Mapa {
   }
   unir('n-a', 's-a'); unir('n-b', 's-b')
 
-  unir('n-datos', N('datos', -8.75, -8.3))
+  // Bandejas: piezas sin responsable de la mesa, en el fondo de cada estación de trabajo
+  unir('n-datos', N('bandeja:datos', -8.75, -8.3))
+  unir('n-estrategia', N('bandeja:estrategia', 0, -8.3))
+  unir('n-creativo', N('bandeja:creativo', 8.75, -8.3))
+  unir('s-e', N('bandeja:publicacion', 13.9, 2.4))
   unir('s-cafe', N('cafe', 7, 8.5))
   unir('s-banos', N('banos', 12.25, 7.8))
   unir('s-kanban', N('kanban', 0, 1.5))
@@ -44,7 +51,7 @@ export function construirMapa(puestos: Puesto[]): Mapa {
 
   // Hacia dónde mira la persona al llegar a cada destino
   const mira: Record<string, XZ> = {
-    datos: [-8.75, -9.7], cafe: [7, 9.4], kanban: [0, 0.6], pantalla: [10, 1.35], cliente: [-10, 4.3],
+    'bandeja:datos': [-8.75, -9.7], 'bandeja:estrategia': [0, -9.7], 'bandeja:creativo': [8.75, -9.7], 'bandeja:publicacion': [13.9, 1.6], cafe: [7, 9.4], kanban: [0, 0.6], pantalla: [10, 1.35], cliente: [-10, 4.3],
     archivo: [-3, 8.7], descarte: [0, 8.4], congelador: [3, 8.7],
   }
   return { nodos, ady, mira }

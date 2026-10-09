@@ -10,7 +10,8 @@ function calcular() {
   )
   const [h, m] = q.get('hora')?.split(':').map(Number) ?? [Number(p.hour), Number(p.minute)]
   const dia = Number(q.get('dia')) || DIAS[p.weekday]
-  return { h, m, laboral: dia <= 5 && h >= ENTRADA && h < SALIDA }
+  const fecha = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
+  return { h, m, fecha, laboral: dia <= 5 && h >= ENTRADA && h < SALIDA }
 }
 
 // Se recalcula cada 20 s: las personas lo consultan en cada cuadro.
@@ -18,4 +19,5 @@ let actual = calcular()
 setInterval(() => { actual = calcular() }, 20_000)
 
 export const enHorario = () => actual.laboral
+export const fechaHoy = () => actual.fecha
 export const horaTexto = () => `${String(actual.h).padStart(2, '0')}:${String(actual.m).padStart(2, '0')}`

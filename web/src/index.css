@@ -171,3 +171,5 @@ small { color: var(--muted); }
   .buscar { width: 200px; }
   .selector small, .user > span:last-child { display: none; }
 }
+.cargando { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; color: var(--muted); }
+.cargando img { height: 28px; }
