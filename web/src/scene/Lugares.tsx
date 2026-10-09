@@ -1,4 +1,5 @@
 import { estacionDe } from '../model'
+import { useVisual, visual } from '../sim/visual'
 import { PiezaMesh, Pin, RED } from './parts'
 import type { Props } from './Puestos'
 
@@ -6,13 +7,14 @@ const ALTURA = { cliente: 0.44, archivo: 0.5, descarte: 0.82, congelador: 1.95 }
 
 // Estaciones tipo "lugar": las piezas se quedan en la estación (sala de cliente) o se cuentan (archivo).
 export function Lugares({ area, sel, onSelect, etapa }: Props) {
+  useVisual()
   const lugares = area.estaciones.filter(e => e.tipo === 'lugar')
   return (
     <>
       {lugares.map(e => {
         const [ax, az] = e.ancla
         const y = ALTURA[e.id] ?? 0.1
-        const activas = area.piezas.filter(p => estacionDe(area, p.etapa).id === e.id)
+        const activas = area.piezas.filter(p => estacionDe(area, p.etapa).id === e.id && !visual.ocultas.has(p.id))
         const archivadas = e.etapas.reduce((n, et) => n + (area.archivadas[et] ?? 0), 0)
         const dim = (et: string) => etapa !== null && etapa !== et
         return (
@@ -46,6 +48,21 @@ export function Lugares({ area, sel, onSelect, etapa }: Props) {
           </group>
         )
       })}
+    </>
+  )
+}
+
+// Piezas que cambiaron de etapa y esperan en su lugar anterior a que alguien las recoja.
+export function Fantasmas() {
+  useVisual()
+  return (
+    <>
+      {[...visual.fantasmas].map(([id, f]) => (
+        <mesh key={id} position={f.p} castShadow>
+          <boxGeometry args={[0.16, 0.13, 0.16]} />
+          <meshStandardMaterial color={f.color} roughness={0.55} />
+        </mesh>
+      ))}
     </>
   )
 }

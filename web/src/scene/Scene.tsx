@@ -1,11 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { MapControls, PerspectiveCamera } from '@react-three/drei'
 import { Vector3 } from 'three'
 import type { MapControls as MapControlsImpl } from 'three-stdlib'
 import { Office } from './Office'
 import { Puestos, type Props } from './Puestos'
-import { Lugares } from './Lugares'
+import { Fantasmas, Lugares } from './Lugares'
+import { Persona } from './Persona'
+import { construirMapa } from '../sim/rutas'
 
 // Encuadre inicial: el objetivo va corrido a la derecha para que el piso quede en el área libre de paneles.
 const OBJETIVO = new Vector3(3.6, 0, -2.2)
@@ -36,6 +38,8 @@ function ControlCamara() {
 
 // Arrastrar mueve, rueda acerca, clic derecho gira.
 export function Scene(props: Props) {
+  const { area } = props
+  const mapa = useMemo(() => construirMapa(area.puestos), [area.puestos])
   return (
     <Canvas shadows="soft" dpr={[1, 2]} className="scene" onPointerMissed={() => props.onSelect(null)}>
       <color attach="background" args={['#EDEFF4']} />
@@ -59,6 +63,10 @@ export function Scene(props: Props) {
       <Office area={props.area} onEstacion={id => props.onSelect({ tipo: 'estacion', id })} />
       <Puestos {...props} />
       <Lugares {...props} />
+      <Fantasmas />
+      {area.personas.map((p, i) => (
+        <Persona key={p.id} persona={p} i={i} puesto={area.puestos.find(x => x.id === p.puesto)!} mapa={mapa} sel={props.sel} onSelect={props.onSelect} />
+      ))}
     </Canvas>
   )
 }

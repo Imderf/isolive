@@ -1,6 +1,6 @@
 // Datos inventados para el ciclo 1. Nombres y títulos no son reales; las cantidades por etapa sí
 // siguen la distribución del tablero Social First (2026-10-09).
-import type { Area, Persona, Pieza, Perfil } from './model'
+import type { Area, Evento, Persona, Pieza, Perfil } from './model.ts'
 
 const etapas = [
   'Señal detectada', 'Identificación/Viabilidad', 'Monitoreo', 'Ideación', 'En producción',
@@ -77,7 +77,7 @@ export const area: Area = {
   personas,
   piezas,
   archivadas: { Finalizado: 32, 'No Aprobado': 48, Freezing: 13 },
-  eventos: [
+  eventos: ([
     { id: 'v1', hora: '10:41', tipo: 'movida', actor: 'p3', pieza: 't40', desde: 'Ideación', hasta: 'Validación Cliente' },
     { id: 'v2', hora: '10:37', tipo: 'comentario', actor: 'p7', pieza: 't20' },
     { id: 'v3', hora: '10:22', tipo: 'movida', actor: 'p12', pieza: 't5', desde: 'Señal detectada', hasta: 'Monitoreo' },
@@ -86,5 +86,5 @@ export const area: Area = {
     { id: 'v6', hora: '09:48', tipo: 'movida', actor: 'p5', pieza: 't38', desde: 'Ideación', hasta: 'En producción' },
     { id: 'v7', hora: '09:31', tipo: 'comentario', actor: 'p9', pieza: 't44' },
     { id: 'v8', hora: '09:15', tipo: 'movida', actor: 'p8', pieza: 't43', desde: 'Validación Cliente', hasta: 'Publicación' },
-  ],
+  ] as Omit<Evento, 'titulo'>[]).map(e => ({ ...e, titulo: piezas.find(p => p.id === e.pieza)!.titulo })),
 }

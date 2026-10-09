@@ -31,10 +31,13 @@ export interface Evento {
   id: string
   hora: string
   tipo: 'movida' | 'comentario' | 'creada' | 'asignada'
-  actor: string
+  actor: string // quien hizo el cambio en la plataforma
   pieza: string
+  titulo: string // copia del título: la pieza puede archivarse y salir de la lista activa
   desde?: string
   hasta?: string
+  asignados?: string[] // nuevos responsables, si el cambio los trae
+  nueva?: Pieza // en 'creada'
 }
 
 export interface Area {

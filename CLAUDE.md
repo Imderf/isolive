@@ -41,8 +41,15 @@ Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogi
 
 - `cd web && npm run dev` — desarrollo (puerto 5180).
 - `cd web && npm run build` — chequeo de tipos + build.
+- `cd web && npm run check` — chequeo de rutas y eventos (Node, sin dependencias).
+- `?hora=HH:MM` y `?dia=1..7` en la URL fuerzan la hora de Bogotá para probar el horario laboral.
 
 ## Estado
 
 - Ciclo 1 (escena con datos inventados): hecho 2026-10-09; rediseñado al look WareTrack el mismo día. Pendiente de validación del look por Imderf.
+- Ciclo 2 (personas y movimiento): hecho 2026-10-09.
+  - `web/src/sim/rutas.ts`: red de pasillos + Dijkstra (cambia con el piso real en V2).
+  - `web/src/sim/eventos.ts`: `aplicar(area, evento)` es lo único que cambia datos; el simulador de prueba y el conector real (ciclo 3) entregan eventos con la misma forma.
+  - `web/src/sim/coreografia.ts`: evento → órdenes (llevar pieza, ir al Kanban, burbuja). Las órdenes mandan sobre la vida de oficina (`scene/Persona.tsx`).
+  - Simulador activo solo con datos de prueba (`App.tsx`), un evento cada 12–22 s.
 - Bundle de producción: 1,2 MB (330 KB gzip), casi todo Three.js. Revisar en el paso 9 (rendimiento).

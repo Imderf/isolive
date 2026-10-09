@@ -1,29 +1,26 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
-import { Html, useCursor } from '@react-three/drei'
-import type { Group } from 'three'
-import { PERFILES, estacionDe, type Area, type Persona, type Seleccion } from '../model'
+import { Html } from '@react-three/drei'
+import { estacionDe, type Area, type Seleccion } from '../model'
+import { useVisual, visual } from '../sim/visual'
 import { Box, PiezaMesh, RED, capaEtiquetas } from './parts'
 
 const W = '#FFFFFF', G2 = '#CBD0DA', SLATE = '#2A303C'
-const PIEL = ['#E9C4A6', '#C9946B', '#8D5A3B']
-const PELO = ['#1A1A1A', '#4D4D4D', '#6B4A32']
 const MAX_EN_ESCRITORIO = 8
 
 export interface Props { area: Area; sel: Seleccion | null; onSelect: (s: Seleccion | null) => void; etapa: string | null }
 
+// Escritorios y las piezas sobre ellos. Las personas se dibujan aparte (Persona.tsx) porque se mueven.
 export function Puestos(props: Props) {
   const { area } = props
+  useVisual()
   return (
     <>
       {area.puestos.map(pu => {
         const persona = area.personas.find(p => p.puesto === pu.id)
         // La pieza vive en el puesto de su primer asignado, salvo que su estación sea un lugar.
-        const piezas = persona ? area.piezas.filter(p => p.asignados[0] === persona.id && estacionDe(area, p.etapa).tipo === 'trabajo') : []
+        const piezas = persona ? area.piezas.filter(p => p.asignados[0] === persona.id && estacionDe(area, p.etapa).tipo === 'trabajo' && !visual.ocultas.has(p.id)) : []
         return (
           <group key={pu.id} position={[pu.pos[0], 0, pu.pos[1]]} rotation={[0, pu.rot, 0]}>
             <Escritorio />
-            {persona && <Figura persona={persona} i={area.personas.indexOf(persona)} {...props} />}
             {piezas.slice(0, MAX_EN_ESCRITORIO).map((p, j) => (
               <PiezaMesh
                 key={p.id}
@@ -60,57 +57,6 @@ function Escritorio() {
       <Box p={[0, 0.46, 0.78]} s={[0.52, 0.08, 0.5]} c={RED} />
       <Box p={[0, 0.8, 1.0]} s={[0.5, 0.58, 0.08]} c={RED} />
       <Box p={[0, 0.22, 0.78]} s={[0.06, 0.44, 0.06]} c={G2} />
-    </group>
-  )
-}
-
-// Persona sentada, construida con primitivas (low-poly). En el ciclo 2 se reemplaza por un modelo animado.
-function Figura({ persona, i, sel, onSelect }: Props & { persona: Persona; i: number }) {
-  const torso = useRef<Group>(null)
-  const [hover, setHover] = useState(false)
-  useCursor(hover)
-  const selected = sel?.tipo === 'persona' && sel.id === persona.id
-  const camisa = PERFILES[persona.perfil].color
-  useFrame(({ clock }) => {
-    if (torso.current) torso.current.position.y = Math.sin(clock.elapsedTime * 1.6 + i) * 0.012
-  })
-  return (
-    <group
-      position={[0, 0, 0.8]}
-      onClick={e => { e.stopPropagation(); onSelect({ tipo: 'persona', id: persona.id }) }}
-      onPointerOver={e => { e.stopPropagation(); setHover(true) }}
-      onPointerOut={() => setHover(false)}
-    >
-      <Box p={[0, 0.56, -0.18]} s={[0.36, 0.14, 0.42]} c={SLATE} />
-      <Box p={[-0.09, 0.28, -0.38]} s={[0.13, 0.48, 0.13]} c={SLATE} />
-      <Box p={[0.09, 0.28, -0.38]} s={[0.13, 0.48, 0.13]} c={SLATE} />
-      <group ref={torso}>
-        <mesh position={[0, 0.92, 0]} castShadow>
-          <capsuleGeometry args={[0.19, 0.3, 4, 12]} />
-          <meshStandardMaterial color={camisa} roughness={0.8} />
-        </mesh>
-        <Box p={[-0.2, 0.86, -0.22]} s={[0.1, 0.1, 0.42]} c={camisa} />
-        <Box p={[0.2, 0.86, -0.22]} s={[0.1, 0.1, 0.42]} c={camisa} />
-        <mesh position={[0, 1.36, 0]} castShadow>
-          <sphereGeometry args={[0.16, 16, 12]} />
-          <meshStandardMaterial color={PIEL[i % 3]} roughness={0.7} />
-        </mesh>
-        <mesh position={[0, 1.42, 0.03]} castShadow>
-          <sphereGeometry args={[0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color={PELO[(i * 2) % 3]} roughness={0.9} />
-        </mesh>
-      </group>
-      {selected && (
-        <mesh position={[0, 0.03, -0.1]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.5, 0.6, 48]} />
-          <meshBasicMaterial color={RED} />
-        </mesh>
-      )}
-      {(hover || selected) && (
-        <Html portal={capaEtiquetas} position={[0, 1.75, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="pill pill-oscuro">{persona.nombre}<small>{PERFILES[persona.perfil].nombre}</small></div>
-        </Html>
-      )}
     </group>
   )
 }

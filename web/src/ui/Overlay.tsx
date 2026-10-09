@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Activity, AlertTriangle, Check, ChevronDown, Hourglass, LayoutGrid, MapPin, Minus, Package, Plus, RotateCcw, Search, Users, X } from 'lucide-react'
 import { PERFILES, estacionDe, personaDe, type Area, type Evento, type Perfil, type Pieza } from '../model'
 import { moverCamara } from '../scene/Scene'
+import { enHorario, horaTexto } from '../sim/horario'
 import type { Props } from '../scene/Puestos'
 
-const hora = () => new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date())
 const iniciales = (n: string) => n.split(' ').slice(0, 2).map(x => x[0]).join('')
 const ESTADO = { vencida: ['Vencida', 'rojo'], urgente: ['Por vencer', 'ambar'], normal: ['A tiempo', 'verde'] } as const
 
@@ -35,9 +35,9 @@ export function Overlay(props: OProps) {
 }
 
 function Barra({ area, onSelect }: OProps) {
-  const [reloj, setReloj] = useState(hora)
+  const [reloj, setReloj] = useState(horaTexto)
   const [q, setQ] = useState('')
-  useEffect(() => { const t = setInterval(() => setReloj(hora()), 20_000); return () => clearInterval(t) }, [])
+  useEffect(() => { const t = setInterval(() => setReloj(horaTexto()), 20_000); return () => clearInterval(t) }, [])
   const buscar = (txt: string) => {
     setQ(txt)
     const t = txt.trim().toLowerCase()
@@ -60,7 +60,8 @@ function Barra({ area, onSelect }: OProps) {
           <ChevronDown />
         </button>
         <span className="tag verde"><i className="punto" />En vivo · {reloj}</span>
-        <span className="tag ambar">Datos de prueba</span>
+        {!enHorario() && <span className="tag gris">Fuera de horario · puestos vacíos</span>}
+        <span className="tag ambar">Datos de prueba · simulación</span>
         <div className="user"><span className="avatar">IR</span><span><b>Imderf Ríos</b><small>Coordinación general</small></span></div>
       </div>
     </header>
@@ -144,7 +145,8 @@ function Ficha({ area, sel, onSelect }: OProps) {
   }
 
   if (sel.tipo === 'pieza') {
-    const p = area.piezas.find(x => x.id === sel.id)!
+    const p = area.piezas.find(x => x.id === sel.id)
+    if (!p) return <Ficha area={area} sel={null} onSelect={onSelect} onEtapa={() => {}} etapa={null} /> // ya se archivó
     const est = estacionDe(area, p.etapa)
     const eventos = area.eventos.filter(e => e.pieza === p.id)
     const [txt, tono] = ESTADO[p.estado]
@@ -249,7 +251,7 @@ function Listas({ area, onSelect }: OProps) {
             <li key={ev.id} className="clic" onClick={() => onSelect({ tipo: 'pieza', id: ev.pieza })}>
               <span className="hora">{ev.hora}</span>
               <span className="avatar sm" style={{ background: PERFILES[actor.perfil].color }}>{iniciales(actor.nombre)}</span>
-              <span className="grow"><b>{actor.nombre}</b> {accion(ev)}<small>{area.piezas.find(p => p.id === ev.pieza)?.titulo}</small></span>
+              <span className="grow"><b>{actor.nombre}</b> {accion(ev)}<small>{ev.titulo}</small></span>
             </li>
           )
         })}
