@@ -7,6 +7,8 @@ import { Office } from './Office'
 import { Puestos, type Props } from './Puestos'
 import { Fantasmas, Lugares } from './Lugares'
 import { Persona } from './Persona'
+import { Visitantes } from './Visitantes'
+import { Trafico } from './Trafico'
 import { construirMapa } from '../sim/rutas'
 
 // Encuadre inicial: el objetivo va corrido a la derecha para que el piso quede en el área libre de paneles.
@@ -40,6 +42,7 @@ function ControlCamara() {
 export function Scene(props: Props) {
   const { area } = props
   const mapa = useMemo(() => construirMapa(area.puestos), [area.puestos])
+  const enEtapa = (id: string) => (props.etapa ? area.piezas.filter(p => p.etapa === props.etapa && p.asignados.includes(id)).length : 0)
   return (
     <Canvas shadows="soft" dpr={[1, 2]} className="scene" onPointerMissed={() => props.onSelect(null)}>
       <color attach="background" args={['#EDEFF4']} />
@@ -60,12 +63,14 @@ export function Scene(props: Props) {
         shadow-camera-bottom={-26}
         shadow-bias={-0.0004}
       />
-      <Office area={props.area} onEstacion={id => props.onSelect({ tipo: 'estacion', id })} />
+      <Office area={area} sel={props.sel} onSelect={props.onSelect} />
+      <Trafico />
+      <Visitantes cliente={area.cliente} />
       <Puestos {...props} />
       <Lugares {...props} />
       <Fantasmas />
       {area.personas.map((p, i) => (
-        <Persona key={p.id} persona={p} i={i} puesto={area.puestos.find(x => x.id === p.puesto)!} mapa={mapa} sel={props.sel} onSelect={props.onSelect} />
+        <Persona key={p.id} persona={p} i={i} puesto={area.puestos.find(x => x.id === p.puesto)!} mapa={mapa} sel={props.sel} onSelect={props.onSelect} enEtapa={enEtapa(p.id)} />
       ))}
     </Canvas>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity, AlertTriangle, Check, ChevronDown, Hourglass, LayoutGrid, MapPin, Minus, Package, Plus, RotateCcw, Search, Users, X } from 'lucide-react'
+import { Activity, AlertTriangle, Check, ChevronDown, Hourglass, LayoutGrid, Layers, MapPin, Minus, Package, Plus, RotateCcw, Search, SquareKanban, Users, X } from 'lucide-react'
 import { PERFILES, estacionDe, personaDe, type Area, type Evento, type Perfil, type Pieza } from '../model'
 import { moverCamara } from '../scene/Scene'
 import { enHorario, fechaHoy, horaTexto } from '../sim/horario'
@@ -35,6 +35,7 @@ export function Overlay(props: OProps) {
       <Ficha {...props} />
       <Recorrido {...props} />
       <Listas {...props} />
+      {props.sel?.tipo === 'tablero' && <Tablero {...props} />}
     </div>
   )
 }
@@ -83,7 +84,7 @@ function Kpi({ icon, n, t, sub, tono = 'rojo' }: { icon: React.ReactNode; n: num
 }
 
 const accion = (ev: Evento) =>
-  ev.tipo === 'movida' ? <>movió a <b>{ev.hasta}</b></> : ev.tipo === 'comentario' ? 'comentó' : ev.tipo === 'creada' ? 'creó' : 'asignó'
+  ev.tipo === 'movida' ? <>movió a <b>{ev.hasta}</b></> : ev.tipo === 'comentario' ? (ev.texto ? <>comentó <q>{ev.texto}</q></> : 'comentó') : ev.tipo === 'creada' ? 'creó' : 'asignó'
 
 function Cabecera({ icon, kicker, titulo, onClose }: { icon: React.ReactNode; kicker: string; titulo: string; onClose?: () => void }) {
   return (
@@ -105,7 +106,8 @@ function Ficha(props: OProps) {
   const carga = (id: string) => area.piezas.filter(x => x.asignados.includes(id)).length
   const maxCarga = Math.max(...area.personas.map(p => carga(p.id)))
 
-  if (!sel) {
+  if (!sel || sel.tipo === 'tablero') {
+    if (props.etapa) return <FichaEtapa {...props} etapa={props.etapa} />
     const perfiles = Object.keys(PERFILES) as Perfil[]
     return (
       <aside className="card ficha">
@@ -126,7 +128,8 @@ function Ficha(props: OProps) {
           <li><i className="caja" />Cada caja es una tarea, en el puesto de su responsable</li>
           <li><i className="pin rojo" />Tarea vencida</li>
           <li><i className="pin ambar" />Tarea por vencer</li>
-          <li><i className="mouse" />Clic en una persona, tarea o estación para ver su ficha</li>
+          <li><i className="mouse" />Pasa el mouse por los números para ver cada zona; clic para su ficha</li>
+          <li><i className="mouse" />Clic en el muro Kanban para ver el tablero completo</li>
         </ul>
       </aside>
     )
@@ -166,6 +169,7 @@ function Ficha(props: OProps) {
           <dt>Fecha límite</dt><dd>{p.vence || 'Sin fecha'}</dd>
           <dt>Estación</dt><dd>{est.nombre}</dd>
         </dl>
+        <Comentarios area={area} pieza={p.id} />
         {eventos.length > 0 && <>
           <h3>Actividad</h3>
           <ul className="filas">{eventos.map(e => <li key={e.id}><span className="hora">{cuando(e)}</span><span className="grow">{personaDe(area, e.actor)?.nombre ?? 'Alguien'} {accion(e)}</span></li>)}</ul>
@@ -282,5 +286,116 @@ function Listas({ area, onSelect }: OProps) {
       </ul>
       {tab === 'actividad' && <p className="nota">Solo eventos reales del tablero. La vida de oficina no aparece aquí.</p>}
     </section>
+  )
+}
+
+// Quién trabaja en una etapa: personas con piezas en ella (cualquier responsable) y piezas sin dueño.
+function FichaEtapa(props: OProps & { etapa: string }) {
+  const { area, etapa, onSelect, onEtapa } = props
+  const piezas = area.piezas.filter(p => p.etapa === etapa)
+  const archivadas = area.archivadas[etapa]
+  const est = estacionDe(area, etapa)
+  const quienes = area.personas
+    .map(p => ({ p, n: piezas.filter(x => x.asignados.includes(p.id)).length }))
+    .filter(x => x.n > 0)
+    .sort((a, b) => b.n - a.n)
+  const sinDueno = piezas.filter(x => !x.asignados.some(id => personaDe(area, id))).length
+  return (
+    <aside className="card ficha">
+      <Cabecera icon={<Layers />} kicker={`Etapa · ${est.nombre}`} titulo={etapa} onClose={() => onEtapa(null)} />
+      <div className="stats">
+        <div><small>{archivadas !== undefined ? 'Piezas archivadas' : 'Piezas en la etapa'}</small><b>{archivadas ?? piezas.length}</b></div>
+        <div><small>Vencidas</small><b className={piezas.some(p => p.estado === 'vencida') ? 'txt-rojo' : ''}>{piezas.filter(p => p.estado === 'vencida').length}</b></div>
+      </div>
+      {archivadas === undefined && <>
+        <h3>Quién está trabajando aquí · {quienes.length}</h3>
+        <ul className="filas">
+          {quienes.map(({ p, n }) => (
+            <li key={p.id} className="clic" onClick={() => onSelect({ tipo: 'persona', id: p.id })}>
+              <span className="avatar sm" style={{ background: PERFILES[p.perfil].color }}>{iniciales(p.nombre)}</span>
+              <span className="grow">{p.nombre}<small>{PERFILES[p.perfil].nombre}</small></span>
+              <b>{n}</b>
+            </li>
+          ))}
+          {sinDueno > 0 && <li><span className="avatar sm" style={{ background: '#CBD0DA' }}>?</span><span className="grow">Sin responsable de la mesa<small>en la bandeja de {est.nombre.toLowerCase()}</small></span><b>{sinDueno}</b></li>}
+        </ul>
+        <h3>Piezas</h3>
+        <ListaPiezas piezas={piezas} area={area} onSelect={id => onSelect({ tipo: 'pieza', id })} />
+      </>}
+    </aside>
+  )
+}
+
+// Vista completa del tablero (clic en el muro Kanban): columnas con sus piezas, responsables y estado.
+function Tablero({ area, onSelect, onEtapa }: OProps) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onSelect(null) }
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+  }, [onSelect])
+  const verEtapa = (et: string) => { onSelect(null); onEtapa(et) }
+  return (
+    <div className="velo" onClick={() => onSelect(null)}>
+      <section className="tablero" onClick={e => e.stopPropagation()}>
+        <div className="cab">
+          <span className="ico rojo"><SquareKanban /></span>
+          <div><small>Muro Kanban · {area.cliente}</small><h2>Tablero completo · {area.piezas.length} piezas activas</h2></div>
+          <button className="cerrar" title="Cerrar (Esc)" onClick={() => onSelect(null)}><X /></button>
+        </div>
+        <div className="columnas">
+          {area.etapas.map(et => {
+            const est = estacionDe(area, et)
+            const piezas = area.piezas.filter(p => p.etapa === et)
+            const arch = area.archivadas[et]
+            return (
+              <div key={et} className="columna">
+                <button className="col-cab" title="Ver quién trabaja en esta etapa" onClick={() => verEtapa(et)}>
+                  <i className="sq-mini" style={{ background: est.color }} /><b>{et}</b><span>{arch ?? piezas.length}</span>
+                </button>
+                <div className="col-lista">
+                  {arch !== undefined
+                    ? <p className="col-arch">{arch} piezas archivadas en {est.nombre.toLowerCase()}</p>
+                    : piezas.map(p => (
+                      <button key={p.id} className={`tarjeta ${p.estado}`} onClick={() => onSelect({ tipo: 'pieza', id: p.id })}>
+                        <span className="t-titulo">{p.titulo}</span>
+                        <span className="t-pie">
+                          <span className="avatares">
+                            {p.asignados.map(id => personaDe(area, id)).filter(x => !!x).map(x => (
+                              <i key={x.id} className="avatar xs" style={{ background: PERFILES[x.perfil].color }} title={x.nombre}>{iniciales(x.nombre)}</i>
+                            ))}
+                          </span>
+                          {p.estado !== 'normal' ? <span className={`tag ${ESTADO[p.estado][1]}`}>{ESTADO[p.estado][0]}</span> : p.vence && <small>{p.vence.slice(8)}/{p.vence.slice(5, 7)}</small>}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+// Comentarios recientes de la pieza (los 5 más nuevos). Solo los ven usuarios de Ogilvy.
+function Comentarios({ area, pieza }: { area: Area; pieza: string }) {
+  const lista = area.comentarios.filter(c => c.pieza === pieza).slice(0, 5)
+  if (!lista.length) return null
+  return (
+    <>
+      <h3>Comentarios recientes</h3>
+      <ul className="comentarios">
+        {lista.map(c => {
+          const autor = personaDe(area, c.autor)
+          return (
+            <li key={c.id}>
+              <span className="avatar sm" style={{ background: autor ? PERFILES[autor.perfil].color : '#CBD0DA' }}>{autor ? iniciales(autor.nombre) : '?'}</span>
+              <div><b>{autor?.nombre ?? 'Alguien'}</b> <small>{cuando({ fecha: c.fecha, hora: c.hora } as Evento)}</small><p>{c.texto}</p></div>
+            </li>
+          )
+        })}
+      </ul>
+    </>
   )
 }

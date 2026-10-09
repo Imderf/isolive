@@ -39,7 +39,11 @@ export interface Evento {
   hasta?: string
   asignados?: string[] // nuevos responsables, si el cambio los trae
   nueva?: Pieza // en 'creada'
+  texto?: string // en 'comentario': el comentario, recortado y sin enlaces (solo usuarios de Ogilvy)
 }
+
+// Comentario de una tarea, recortado a 280 caracteres y sin enlaces. Nunca se envía a usuarios cliente.
+export interface Comentario { id: string; pieza: string; autor: string; texto: string; fecha: string; hora: string }
 
 export interface Area {
   id: string
@@ -52,12 +56,13 @@ export interface Area {
   piezas: Pieza[]
   archivadas: Record<string, number> // etapa → cantidad (no se traen una a una)
   eventos: Evento[]
+  comentarios: Comentario[] // recientes (7 días), más nuevo primero
 }
 
 // Lo que entrega un conector (servidor); la disposición 3D la pone el web.
-export type DatosArea = Pick<Area, 'etapas' | 'personas' | 'piezas' | 'archivadas' | 'eventos'>
+export type DatosArea = Pick<Area, 'etapas' | 'personas' | 'piezas' | 'archivadas' | 'eventos' | 'comentarios'>
 
-export type Seleccion = { tipo: 'persona' | 'pieza' | 'estacion'; id: string }
+export type Seleccion = { tipo: 'persona' | 'pieza' | 'estacion' | 'tablero'; id: string }
 
 // Estilo WareTrack con el rojo Ogilvy (#EF3B3A) en el papel del azul: familia de rojos + neutros fríos.
 export const PERFILES: Record<Perfil, { nombre: string; color: string }> = {

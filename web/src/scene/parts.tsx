@@ -54,6 +54,17 @@ export function Label({ p, children, onClick, tono = 'claro' }: { p: V3; childre
   )
 }
 
+// Marca de zona: solo el número (o un ícono) y el texto aparece al pasar el mouse o si está elegida.
+export function Marca({ p, badge, children, onClick, abierta }: { p: V3; badge: React.ReactNode; children: React.ReactNode; onClick?: () => void; abierta?: boolean }) {
+  return (
+    <Html portal={capaEtiquetas} position={p} zIndexRange={[10, 0]}>
+      <div className={`marca${abierta ? ' abierta' : ''}`} onClick={onClick}>
+        <b className="marca-n">{badge}</b><span className="marca-txt">{children}</span>
+      </div>
+    </Html>
+  )
+}
+
 // Una pieza (tarea) como caja. Vencida: pin rojo encima. Urgente: pin ámbar.
 export function PiezaMesh({ pieza, p, color, dim, selected, onSelect }: {
   pieza: Pieza; p: V3; color: string; dim: boolean; selected: boolean; onSelect: (id: string) => void

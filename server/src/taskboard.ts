@@ -1,4 +1,4 @@
-import type { DatosArea, Evento, Perfil, Persona, Pieza } from '../../web/src/model.ts'
+import type { Comentario, DatosArea, Evento, Perfil, Persona, Pieza } from '../../web/src/model.ts'
 
 // Conector del TaskBoard (management.colombiaogilvy.com): lee /api/live con la llave de servicio
 // y traduce el tablero al modelo común. La disposición 3D (estaciones, puestos) la pone el web.
@@ -16,6 +16,7 @@ interface Estado {
   cards: { id: string; title: string; listId: string; dueDate: string | null; completedAt: string | null; assignees: string[] }[]
   members: { id: string; name: string }[]
 }
+export interface ComentarioTB { id: string; cardId: string; authorId: string; text: string; createdAt: string }
 export interface Actividad {
   id: string; type: string; actorId: string; cardId: string | null; createdAt: string
   data: { title?: string; from?: string; to?: string }
@@ -42,14 +43,15 @@ export function estadoDe(vence: string, hoy: string): Pieza['estado'] {
 export async function leerArea(cfg: ConfigArea, o: Origen, ahora = new Date()): Promise<DatosArea> {
   const p = cfg.conector.proyecto
   const desde = new Date(ahora.getTime() - 3 * 86_400_000).toISOString() // feed inicial: últimos 3 días
-  const [estado, actividad] = await Promise.all([
+  const [estado, actividad, comentarios] = await Promise.all([
     pedir<Estado>(o, `/projects/${p}/state`),
     pedir<Actividad[]>(o, `/projects/${p}/activity?since=${encodeURIComponent(desde)}`),
+    pedir<ComentarioTB[]>(o, `/projects/${p}/comments`),
   ])
-  return traducir(cfg, estado, actividad, ahora)
+  return traducir(cfg, estado, actividad, comentarios, ahora)
 }
 
-export function traducir(cfg: ConfigArea, estado: Estado, actividad: Actividad[], ahora: Date): DatosArea {
+export function traducir(cfg: ConfigArea, estado: Estado, actividad: Actividad[], comentariosTB: ComentarioTB[], ahora: Date): DatosArea {
   const nombres = new Map(estado.members.map(m => [m.id, m.name]))
   const personas: Persona[] = cfg.personas
     .filter(p => nombres.has(p.id))
@@ -72,20 +74,29 @@ export function traducir(cfg: ConfigArea, estado: Estado, actividad: Actividad[]
     })
   }
 
+  const deMesa = comentariosTB.filter(c => enMesa.has(c.authorId))
   const eventos = actividad
     .filter(a => a.cardId && enMesa.has(a.actorId))
-    .map(evento)
+    .map(a => evento(a, deMesa))
     .filter((e): e is Evento => e !== null)
     .reverse()
     .slice(0, 60)
-  return { etapas: estado.lists.map(l => l.name), personas, piezas, archivadas, eventos }
+  const comentarios: Comentario[] = deMesa.map(c => {
+    const d = new Date(c.createdAt)
+    return { id: c.id, pieza: c.cardId, autor: c.authorId, texto: c.text, fecha: fechaBogota(d), hora: horaBogota(d) }
+  }).reverse()
+  return { etapas: estado.lists.map(l => l.name), personas, piezas, archivadas, eventos, comentarios }
 }
 
-export function evento(a: Actividad): Evento | null {
+// El comentario de un 'comment.added' es el de la misma tarjeta y autor creado en el mismo instante (±10 s).
+export function evento(a: Actividad, comentarios: ComentarioTB[] = []): Evento | null {
   const d = new Date(a.createdAt)
   const base = { id: a.id, fecha: fechaBogota(d), hora: horaBogota(d), actor: a.actorId, pieza: a.cardId!, titulo: a.data.title ?? '' }
   if (a.type === 'card.moved') return { ...base, tipo: 'movida', desde: a.data.from, hasta: a.data.to }
   if (a.type === 'card.created') return { ...base, tipo: 'creada' }
-  if (a.type === 'comment.added') return { ...base, tipo: 'comentario' }
+  if (a.type === 'comment.added') {
+    const c = comentarios.find(x => x.cardId === a.cardId && x.authorId === a.actorId && Math.abs(Date.parse(x.createdAt) - d.getTime()) <= 10_000)
+    return { ...base, tipo: 'comentario', texto: c?.text }
+  }
   return null
 }

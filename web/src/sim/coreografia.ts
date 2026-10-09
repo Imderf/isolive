@@ -20,7 +20,7 @@ function lugarDe(a: Area, p: Pieza): { nodo: string; pos: V3; color: string } {
 // Traduce un evento real a movimiento. Lo real manda: estas órdenes se atienden antes que la vida de oficina.
 export function coreografiar(antes: Area, despues: Area, ev: Evento) {
   if (!enHorario()) return
-  if (ev.tipo === 'comentario') return burbuja(ev.actor, 'Comentó')
+  if (ev.tipo === 'comentario') return burbuja(ev.actor, ev.texto ? `«${ev.texto.length > 48 ? ev.texto.slice(0, 47) + '…' : ev.texto}»` : 'Comentó', 7)
   if (ev.tipo === 'creada') return burbuja(ev.actor, 'Nueva señal')
   if (ev.tipo !== 'movida' || !ev.hasta) return
 

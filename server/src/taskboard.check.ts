@@ -22,6 +22,10 @@ const d = traducir(cfg, {
   { id: 'a1', type: 'card.moved', actorId: 'u1', cardId: 'c1', createdAt: '2026-10-09T15:30:00.000Z', data: { title: 'Uno', from: 'Señal', to: 'Ideación' } },
   { id: 'a2', type: 'comment.added', actorId: 'externo', cardId: 'c1', createdAt: '2026-10-09T15:31:00.000Z', data: { title: 'Uno' } },
   { id: 'a3', type: 'card.updated', actorId: 'u2', cardId: 'c1', createdAt: '2026-10-09T15:32:00.000Z', data: { title: 'Uno' } },
+  { id: 'a4', type: 'comment.added', actorId: 'u2', cardId: 'c1', createdAt: '2026-10-09T15:32:05.000Z', data: { title: 'Uno' } },
+], [
+  { id: 'k1', cardId: 'c1', authorId: 'u2', text: 'Ya quedó', createdAt: '2026-10-09T15:32:04.000Z' },
+  { id: 'k2', cardId: 'c1', authorId: 'externo', text: 'No es de la mesa', createdAt: '2026-10-09T15:31:01.000Z' },
 ], new Date('2026-10-09T16:00:00.000Z'))
 
 assert.deepEqual(d.personas.map(p => p.nombre), ['Ana', 'Beto']) // u9 no es miembro; el nombre de config manda sobre el correo
@@ -30,7 +34,9 @@ assert.equal(d.piezas.length, 1)
 assert.deepEqual(d.piezas[0].asignados, ['u2']) // quien no está en la mesa no cuenta
 assert.equal(d.piezas[0].estado, 'vencida')
 assert.equal(d.piezas[0].vence, '2026-10-08')
-assert.equal(d.eventos.length, 1) // solo actores de la mesa y tipos que se dibujan
-assert.equal(d.eventos[0].hora, '10:30') // hora de Bogotá
-assert.equal(d.eventos[0].hasta, 'Ideación')
+assert.equal(d.eventos.length, 2) // solo actores de la mesa y tipos que se dibujan
+assert.equal(d.eventos[1].hora, '10:30') // hora de Bogotá; más nuevo primero
+assert.equal(d.eventos[1].hasta, 'Ideación')
+assert.equal(d.eventos[0].texto, 'Ya quedó') // el comentario se cruza con su evento
+assert.deepEqual(d.comentarios.map(c => c.texto), ['Ya quedó']) // solo autores de la mesa
 console.log('ok · conector TaskBoard')

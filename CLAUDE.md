@@ -21,7 +21,9 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 - **Presencia por horario laboral** (L–V, America/Bogota): en su puesto; fuera de horario, vacío. No usar la presencia del socket del TaskBoard.
 - **La pieza vive en el puesto de su primer asignado.** Estaciones tipo `lugar` (sala de cliente, archivo) guardan sus piezas ahí. Quien opera el tablero aparece en el muro Kanban.
 - **Clientes:** ven solo sus áreas, sin nombres de personas (avatar por perfil). El filtro se aplica en el servidor, nunca solo en el navegador.
-- Sin texto de comentarios ni adjuntos. Sin agencia de cada persona.
+- Comentarios: el texto llega recortado (280 caracteres, sin enlaces) y es **solo para usuarios de Ogilvy**; el filtro del ciclo 5 lo quita para clientes en el servidor. Sin adjuntos. Sin agencia de cada persona.
+- Marcas de zona compactas (número o ícono); el texto se abre al pasar el mouse o con la zona elegida.
+- Decoración (no son datos): dos personas del cliente en la sala (`Visitantes.tsx`) y tráfico por hora de Bogotá (`Trafico.tsx`, pico 6–9 y 16:30–19:30).
 
 ## Prohibido
 
@@ -60,4 +62,6 @@ Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogi
 - Ciclo 3 (conector TaskBoard): hecho 2026-10-09 en local contra la copia de producción.
   - Management, rama `ogilvy-live` (worktree): `GET /api/live/projects/:id/state` y `/activity?since=`, con llave `LIVE_TOKEN` (Bearer, comparación en tiempo constante), solo proyectos de `LIVE_PROJECTS`, 60 consultas/min. Sin llave responden 404. No devuelven descripciones, comentarios, adjuntos ni correos. **No está desplegado.**
   - Piezas sin responsable de la mesa (13 de 45 en Social First) esperan en la bandeja de su estación.
+  - Comentarios: ruta `/api/live/projects/:id/comments?since=` (7 días por defecto); el servidor los cruza con `comment.added` (misma tarjeta y autor, ±10 s).
+  - Vista del tablero completo (clic en el muro Kanban) y vista por etapa (quién trabaja en ella, con aro y conteo en la escena).
 - Bundle de producción: 1,2 MB (330 KB gzip), casi todo Three.js. Revisar en el paso 9 (rendimiento).

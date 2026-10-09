@@ -41,7 +41,7 @@ export function construirMapa(puestos: Puesto[]): Mapa {
   unir('n-creativo', N('bandeja:creativo', 8.75, -8.3))
   unir('s-e', N('bandeja:publicacion', 13.9, 2.4))
   unir('s-cafe', N('cafe', 7, 8.5))
-  unir('s-banos', N('banos', 12.25, 7.8))
+  unir('s-banos', N('banos', 12.25, 8.7)) // adentro de la puerta
   unir('s-kanban', N('kanban', 0, 1.5))
   unir('s-pantalla', N('pantalla', 10, 2.4))
   unir('s-a', N('sala-puerta', -6.2, 5.6)); unir('sala-puerta', N('cliente', -7.6, 4.3))

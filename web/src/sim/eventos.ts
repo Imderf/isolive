@@ -13,7 +13,11 @@ export function aplicar(a: Area, ev: Evento): Area {
     }
   }
   if (ev.tipo === 'creada' && ev.nueva) piezas = [...piezas, ev.nueva]
-  return { ...a, piezas, archivadas, eventos: [ev, ...a.eventos].slice(0, 60) }
+  let { comentarios } = a
+  if (ev.tipo === 'comentario' && ev.texto) {
+    comentarios = [{ id: ev.id, pieza: ev.pieza, autor: ev.actor, texto: ev.texto, fecha: ev.fecha ?? '', hora: ev.hora }, ...comentarios].slice(0, 300)
+  }
+  return { ...a, piezas, archivadas, comentarios, eventos: [ev, ...a.eventos].slice(0, 60) }
 }
 
 // ── Simulador de prueba (solo con datos inventados) ───────────────────────────────────────────
@@ -61,7 +65,8 @@ export function simularEvento(a: Area, hora: string, rnd = Math.random, libre = 
 
   if (r < 0.88) {
     const p = elegir(a.piezas)
-    return { id, hora, tipo: 'comentario', actor: elegir(p.asignados), pieza: p.id, titulo: p.titulo }
+    const texto = elegir(['Ya subí la versión 2 con los ajustes', '¿El cliente ya aprobó el copy?', 'Cambié el arte según el feedback', 'Esta tendencia está creciendo, hay que moverla rápido', 'Falta la pieza para stories', 'Listo para validación'])
+    return { id, hora, tipo: 'comentario', actor: elegir(p.asignados), pieza: p.id, titulo: p.titulo, texto }
   }
 
   const autor = elegir(a.personas.filter(x => x.perfil === 'data'))

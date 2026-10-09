@@ -59,6 +59,7 @@ export const area: Area = {
   personas,
   piezas,
   archivadas: { Finalizado: 32, 'No Aprobado': 48, Freezing: 13 },
+  comentarios: [],
   eventos: ([
     { id: 'v1', hora: '10:41', tipo: 'movida', actor: 'p3', pieza: 't40', desde: 'Ideación', hasta: 'Validación Cliente' },
     { id: 'v2', hora: '10:37', tipo: 'comentario', actor: 'p7', pieza: 't20' },

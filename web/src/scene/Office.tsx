@@ -1,10 +1,11 @@
-import type { Area, Estacion } from '../model'
-import { Arbol, Box, Label, RED } from './parts'
+import { Bath, Coffee, SquareKanban } from 'lucide-react'
+import type { Area, Estacion, Seleccion } from '../model'
+import { Arbol, Box, Marca, RED } from './parts'
 
 const W = '#FFFFFF', PAD = '#F7F3F3', G = '#E6E8EE', G2 = '#CBD0DA', SLATE = '#2A303C', ROSA = '#F9C9C9'
 
 // Piso de oficina genérico (V1). En V2 se reemplaza por el piso 4 real del Naos.
-export function Office({ area, onEstacion }: { area: Area; onEstacion: (id: string) => void }) {
+export function Office({ area, sel, onSelect }: { area: Area; sel: Seleccion | null; onSelect: (s: Seleccion) => void }) {
   return (
     <group>
       {/* Exterior: andén, calles y árboles */}
@@ -32,7 +33,9 @@ export function Office({ area, onEstacion }: { area: Area; onEstacion: (id: stri
       <Box p={[0, 2.66, -9.9]} s={[30, 0.08, 0.1]} c={G2} r={0} />
       <Box p={[-14.9, 2.66, 0]} s={[0.1, 0.08, 20]} c={G2} r={0} />
 
-      {area.estaciones.map((e, i) => <Zona key={e.id} e={e} n={i + 1} extra={extra(area, e)} onClick={() => onEstacion(e.id)} />)}
+      {area.estaciones.map((e, i) => (
+        <Zona key={e.id} e={e} n={i + 1} extra={extra(area, e)} abierta={sel?.tipo === 'estacion' && sel.id === e.id} onClick={() => onSelect({ tipo: 'estacion', id: e.id })} />
+      ))}
 
       {/* 01 Muro de datos: pantalla con barras */}
       <Box p={[-10, 1.6, -9.72]} s={[4.2, 1.8, 0.1]} c={SLATE} />
@@ -60,7 +63,7 @@ export function Office({ area, onEstacion }: { area: Area; onEstacion: (id: stri
       {[-11.2, -10, -8.8].flatMap(x => [[x, 3.2], [x, 5.4]]).map(([x, z], i) => <Box key={i} p={[x, 0.25, z]} s={[0.46, 0.5, 0.46]} c={SLATE} />)}
 
       {/* Muro Kanban (coordinación): una columna por etapa activa, una nota por tarea (máx. 10) */}
-      <Kanban area={area} />
+      <Kanban area={area} abierta={sel?.tipo === 'tablero'} onClick={() => onSelect({ tipo: 'tablero', id: '' })} />
 
       {/* 05 Pantalla de publicación */}
       <Box p={[10, 1.5, 1.35]} s={[5, 2.2, 0.14]} c={SLATE} />
@@ -84,10 +87,8 @@ export function Office({ area, onEstacion }: { area: Area; onEstacion: (id: stri
       <Box p={[7, 0.47, 9.35]} s={[3.6, 0.94, 0.7]} c={W} />
       <Box p={[7, 0.47, 9.71]} s={[3.6, 0.9, 0.02]} c={RED} r={0} />
       <Box p={[6.2, 1.17, 9.35]} s={[0.45, 0.5, 0.4]} c={SLATE} />
-      <Label p={[7, 1.9, 9.35]}>Café</Label>
-      <Box p={[12.25, 0.55, 8.3]} s={[3.5, 1.1, 0.14]} c={G} />
-      <Box p={[10.5, 0.55, 9.15]} s={[0.14, 1.1, 1.7]} c={G} />
-      <Label p={[12.25, 1.6, 9.1]}>Baños</Label>
+      <Marca p={[7, 1.9, 9.35]} badge={<Coffee />}>Café</Marca>
+      <Banos />
       <Box p={[-10, 0.22, 9.2]} s={[2.6, 0.44, 0.9]} c={RED} />
       <Box p={[-10, 0.62, 9.58]} s={[2.6, 0.5, 0.22]} c={RED} />
       <Box p={[-10, 0.15, 8.2]} s={[1, 0.3, 0.6]} c={W} />
@@ -105,7 +106,7 @@ const extra = (a: Area, e: Estacion) => {
   return e.id === 'cliente' ? `${n} esperando` : String(n)
 }
 
-function Zona({ e, n, extra, onClick }: { e: Estacion; n: number; extra: string; onClick: () => void }) {
+function Zona({ e, n, extra, abierta, onClick }: { e: Estacion; n: number; extra: string; abierta: boolean; onClick: () => void }) {
   const [x1, z1, x2, z2] = e.zona
   return (
     <group>
@@ -113,18 +114,19 @@ function Zona({ e, n, extra, onClick }: { e: Estacion; n: number; extra: string;
         <planeGeometry args={[x2 - x1, z2 - z1]} />
         <meshStandardMaterial color={PAD} roughness={1} />
       </mesh>
-      <Label p={[x1 + 1.4, 0.1, z1 + 0.5]} onClick={onClick}>
-        <b className="pill-n">{String(n).padStart(2, '0')}</b>{e.nombre}{extra && <em className="pill-extra">{extra}</em>}
-      </Label>
+      <Marca p={[x1 + 0.6, 0.1, z1 + 0.5]} badge={String(n).padStart(2, '0')} abierta={abierta} onClick={onClick}>
+        {e.nombre}{e.tipo === 'lugar' && e.etapas[0] !== e.nombre && <small className="marca-col">{e.etapas.join(' · ')}</small>}{extra && <em className="pill-extra">{extra}</em>}
+      </Marca>
     </group>
   )
 }
 
-function Kanban({ area }: { area: Area }) {
+// Clic en el muro (o en su marca) abre la vista completa del tablero.
+function Kanban({ area, abierta, onClick }: { area: Area; abierta: boolean; onClick: () => void }) {
   const etapas = area.etapas.filter(et => !(et in area.archivadas))
   const x0 = -3.5, ancho = 7 / etapas.length
   return (
-    <group position={[0, 0, 0.6]}>
+    <group position={[0, 0, 0.6]} onClick={e => { e.stopPropagation(); onClick() }} onPointerOver={() => { document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
       <Box p={[0, 1.3, 0]} s={[7.6, 2.05, 0.1]} c={W} />
       <Box p={[-3.2, 0.15, 0]} s={[0.12, 0.3, 0.5]} c={G2} />
       <Box p={[3.2, 0.15, 0]} s={[0.12, 0.3, 0.5]} c={G2} />
@@ -141,7 +143,59 @@ function Kanban({ area }: { area: Area }) {
           </group>
         )
       })}
-      <Label p={[0, 2.6, 0]}>Muro Kanban</Label>
+      <Marca p={[-3.6, 2.5, 0]} badge={<SquareKanban />} abierta={abierta} onClick={onClick}>Muro Kanban · ver tablero completo</Marca>
+    </group>
+  )
+}
+
+// Baños: piso de baldosa, muros celestes, puerta abierta con letrero, dos cubículos y lavamanos con espejo.
+// La puerta queda en x≈12.25 (nodo 'banos' de la red): quien entra, desaparece adentro.
+function Banos() {
+  const BALDOSA = ['#E3EEF7', '#FFFFFF'], MURO = '#D7E6F2', BLANCO = '#FFFFFF', ACERO = '#9AA3B2'
+  return (
+    <group>
+      {Array.from({ length: 21 }, (_, k) => {
+        const i = k % 7, j = Math.floor(k / 7)
+        return (
+          <mesh key={k} position={[10.75 + i * 0.5, 0.012, 8.55 + j * 0.5]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[0.49, 0.49]} />
+            <meshStandardMaterial color={BALDOSA[(i + j) % 2]} roughness={0.5} />
+          </mesh>
+        )
+      })}
+      <Box p={[11.175, 0.55, 8.3]} s={[1.35, 1.1, 0.12]} c={MURO} />
+      <Box p={[13.325, 0.55, 8.3]} s={[1.35, 1.1, 0.12]} c={MURO} />
+      <Box p={[10.5, 0.55, 9.15]} s={[0.12, 1.1, 1.82]} c={MURO} />
+      <Box p={[12.25, 1.06, 8.3]} s={[0.8, 0.08, 0.12]} c={MURO} />
+      {/* puerta abierta hacia adentro */}
+      <group position={[11.85, 0, 8.32]} rotation={[0, -1.2, 0]}>
+        <Box p={[0.38, 0.5, 0]} s={[0.76, 0.98, 0.04]} c={BLANCO} />
+        <Box p={[0.66, 0.5, 0.04]} s={[0.04, 0.12, 0.03]} c={ACERO} />
+      </group>
+      {/* letrero WC */}
+      <Box p={[12.25, 1.38, 8.22]} s={[0.56, 0.3, 0.03]} c="#2F6FDE" />
+      {[-0.1, 0.1].map(x => (
+        <group key={x} position={[12.25 + x, 1.33, 8.2]}>
+          <mesh position={[0, 0.1, 0]}><sphereGeometry args={[0.03, 10, 8]} /><meshBasicMaterial color={BLANCO} /></mesh>
+          <Box p={[0, 0.0, 0]} s={[0.06, 0.12, 0.01]} c={BLANCO} r={0} shadow={false} />
+        </group>
+      ))}
+      {/* cubículos con inodoro */}
+      {[12.9, 13.6].map(x => (
+        <group key={x}>
+          <mesh position={[x, 0.15, 9.62]} castShadow><cylinderGeometry args={[0.11, 0.13, 0.3, 16]} /><meshStandardMaterial color={BLANCO} roughness={0.3} /></mesh>
+          <mesh position={[x, 0.33, 9.6]} castShadow><cylinderGeometry args={[0.17, 0.15, 0.08, 20]} /><meshStandardMaterial color={BLANCO} roughness={0.3} /></mesh>
+          <Box p={[x, 0.5, 9.86]} s={[0.36, 0.32, 0.12]} c={BLANCO} />
+        </group>
+      ))}
+      {[12.55, 13.25, 13.95].map(x => <Box key={x} p={[x, 0.5, 9.5]} s={[0.04, 1.0, 0.9]} c={MURO} />)}
+      {/* lavamanos con espejo */}
+      <Box p={[10.85, 0.4, 9.35]} s={[0.5, 0.8, 1.1]} c={BLANCO} />
+      {[9.1, 9.6].map(z => (
+        <mesh key={z} position={[10.85, 0.8, z]}><cylinderGeometry args={[0.13, 0.11, 0.04, 18]} /><meshStandardMaterial color="#C9D3DF" roughness={0.2} /></mesh>
+      ))}
+      <Box p={[10.58, 0.98, 9.35]} s={[0.03, 0.22, 0.9]} c="#BFD7EA" r={0} shadow={false} />
+      <Marca p={[12.25, 1.8, 8.3]} badge={<Bath />}>Baños</Marca>
     </group>
   )
 }
