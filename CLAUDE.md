@@ -23,7 +23,7 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 - **Clientes:** ven solo sus áreas, sin nombres de personas (avatar por perfil). El filtro se aplica en el servidor, nunca solo en el navegador.
 - Comentarios: el texto llega recortado (280 caracteres, sin enlaces) y es **solo para usuarios de Ogilvy**; el filtro del ciclo 5 lo quita para clientes en el servidor. Sin adjuntos. Sin agencia de cada persona.
 - Marcas de zona compactas (número o ícono); el texto se abre al pasar el mouse o con la zona elegida.
-- Decoración (no son datos): dos personas del cliente en la sala (`Visitantes.tsx`) y tráfico por hora de Bogotá (`Trafico.tsx`, pico 6–9 y 16:30–19:30).
+- Decoración (no son datos): dos personas del cliente en la sala (`Visitantes.tsx`) y tráfico por hora de Bogotá (`Trafico.tsx`, pico 6–9 y 16:30–19:30): dos rutas que no se cruzan, misma velocidad y distancia fija por ruta; los carros entran y salen lejos, en la neblina.
 
 ## Prohibido
 

@@ -9,14 +9,15 @@ export function Office({ area, sel, onSelect }: { area: Area; sel: Seleccion | n
   return (
     <group>
       {/* Exterior: andén, calles y árboles */}
-      <mesh position={[1.5, -0.32, 1.5]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[40, 30]} />
+      {/* Suelo y calles largos: se pierden en la neblina, que es donde entran y salen los carros */}
+      <mesh position={[0, -0.32, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[170, 170]} />
         <meshStandardMaterial color="#F6F7FA" roughness={1} />
       </mesh>
-      <Box p={[1.5, -0.3, 13.6]} s={[40, 0.02, 3]} c="#DCE0E8" r={0} />
-      <Box p={[18.6, -0.3, 0]} s={[3, 0.02, 30]} c="#DCE0E8" r={0} />
-      {Array.from({ length: 12 }, (_, i) => <Box key={`r${i}`} p={[-16 + i * 3.2, -0.28, 13.6]} s={[1.4, 0.01, 0.12]} c={W} r={0} shadow={false} />)}
-      {Array.from({ length: 9 }, (_, i) => <Box key={`c${i}`} p={[18.6, -0.28, -13 + i * 3.2]} s={[0.12, 0.01, 1.4]} c={W} r={0} shadow={false} />)}
+      <Box p={[0, -0.3, 13.6]} s={[170, 0.02, 3]} c="#DCE0E8" r={0} />
+      <Box p={[18.6, -0.3, 0]} s={[3, 0.02, 170]} c="#DCE0E8" r={0} />
+      {Array.from({ length: 52 }, (_, i) => <Box key={`r${i}`} p={[-82 + i * 3.2, -0.28, 13.6]} s={[1.4, 0.01, 0.12]} c={W} r={0} shadow={false} />)}
+      {Array.from({ length: 52 }, (_, i) => <Box key={`c${i}`} p={[18.6, -0.28, -82 + i * 3.2]} s={[0.12, 0.01, 1.4]} c={W} r={0} shadow={false} />)}
       {[-12, -6, 0, 6, 12].map(x => <Arbol key={`ta${x}`} p={[x, -0.3, 11.6]} s={1.3} />)}
       {[-8, -2, 4, 10].map(z => <Arbol key={`tb${z}`} p={[16.6, -0.3, z]} s={1.3} />)}
 

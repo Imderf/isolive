@@ -15,43 +15,68 @@ export function densidad(h: number, finde: boolean) {
   return finde ? base * 0.6 : base
 }
 
-// Se maneja por la derecha. Calle sur (a lo largo de x) y calle oriental (a lo largo de z).
-const CARRILES = [
-  { eje: 'x', fijo: 14.2, dir: 1, desde: -18.5, hasta: 21.5 },
-  { eje: 'x', fijo: 13.0, dir: -1, desde: -18.5, hasta: 21.5 },
-  { eje: 'z', fijo: 19.2, dir: -1, desde: -13.5, hasta: 16.5 },
-  { eje: 'z', fijo: 18.0, dir: 1, desde: -13.5, hasta: 16.5 },
-] as const
-const TOTAL = 24
+type P = [number, number]
+
+// Ruta como polilínea con la esquina redondeada. Se maneja por la derecha y las dos rutas no se cruzan:
+//  · baja por la calle oriental (x=18.0) y gira a la derecha hacia el occidente (z=13.0);
+//  · va hacia el oriente (z=14.2) y gira a la izquierda hacia el norte (x=19.2).
+// Los extremos quedan lejos, dentro de la neblina: ahí entran y salen los carros, nunca a la vista.
+function ruta(a: P, esquina: P, b: P, radio: number): { puntos: P[]; acum: number[] } {
+  const dir = (de: P, a: P): P => { const l = Math.hypot(a[0] - de[0], a[1] - de[1]); return [(a[0] - de[0]) / l, (a[1] - de[1]) / l] }
+  const d1 = dir(a, esquina), d2 = dir(esquina, b)
+  const ini: P = [esquina[0] - d1[0] * radio, esquina[1] - d1[1] * radio]
+  const fin: P = [esquina[0] + d2[0] * radio, esquina[1] + d2[1] * radio]
+  const curva: P[] = Array.from({ length: 7 }, (_, k) => {
+    const t = k / 6, u = 1 - t // Bézier cuadrática por la esquina
+    return [u * u * ini[0] + 2 * u * t * esquina[0] + t * t * fin[0], u * u * ini[1] + 2 * u * t * esquina[1] + t * t * fin[1]]
+  })
+  const puntos = [a, ...curva, b]
+  const acum = [0]
+  for (let i = 1; i < puntos.length; i++) acum.push(acum[i - 1] + Math.hypot(puntos[i][0] - puntos[i - 1][0], puntos[i][1] - puntos[i - 1][1]))
+  return { puntos, acum }
+}
+
+const RUTAS = [
+  { ...ruta([18.0, -80], [18.0, 13.0], [-80, 13.0], 1.4), vel: 6 },
+  { ...ruta([-80, 14.2], [19.2, 14.2], [19.2, -80], 2.2), vel: 5.4 },
+]
+const POR_RUTA = 11 // cupos por ruta, repartidos a distancia fija: nunca se alcanzan
+
+function enRuta(r: (typeof RUTAS)[number], s: number): { x: number; z: number; rot: number } {
+  const total = r.acum[r.acum.length - 1]
+  s = Math.min(Math.max(s, 0), total - 0.01)
+  let i = 1
+  while (r.acum[i] < s) i++
+  const [x0, z0] = r.puntos[i - 1], [x1, z1] = r.puntos[i]
+  const t = (s - r.acum[i - 1]) / (r.acum[i] - r.acum[i - 1])
+  return { x: x0 + (x1 - x0) * t, z: z0 + (z1 - z0) * t, rot: Math.atan2(-(z1 - z0), x1 - x0) }
+}
+
+// Decide si un cupo trae carro en una vuelta dada (estable dentro de la vuelta).
+const azar = (a: number, b: number) => { const x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return x - Math.floor(x) }
+
 const COLORES = ['#FFFFFF', '#F5C518', '#2A303C', '#CBD0DA', '#F5C518', '#EF3B3A', '#475569', '#FFFFFF', '#F5C518', '#8E1F2A']
-const AUTOS = Array.from({ length: TOTAL }, (_, i) => ({
-  carril: CARRILES[i % 4],
-  desfase: (i * 0.618) % 1,
-  vel: 4 + ((i * 7) % 5) * 0.6,
-  bus: i % 11 === 5, // bus rojo, como el TransMilenio
-  color: COLORES[i % COLORES.length],
-}))
+const AUTOS = RUTAS.flatMap((_, r) => Array.from({ length: POR_RUTA }, (_, k) => ({
+  r, k, bus: k === 4, color: COLORES[(k * 3 + r) % COLORES.length],
+})))
 
 export function Trafico() {
   const refs = useRef<(Group | null)[]>([])
   useFrame(({ clock }) => {
-    const visibles = Math.round(TOTAL * densidad(horaDecimal(), esFinde()))
+    const dens = densidad(horaDecimal(), esFinde())
     const t = clock.elapsedTime
     AUTOS.forEach((a, i) => {
       const g = refs.current[i]
       if (!g) return
-      // El orden de los autos se baraja para que los que aparecen con poca densidad queden repartidos en los carriles.
-      g.visible = ((i * 5) % TOTAL) < visibles
+      const r = RUTAS[a.r]
+      const total = r.acum[r.acum.length - 1]
+      const recorrido = t * r.vel + (a.k / POR_RUTA) * total
+      const vuelta = Math.floor(recorrido / total)
+      g.visible = azar(i, vuelta) < dens // solo cambia al empezar la vuelta, lejos en la neblina
       if (!g.visible) return
-      const { eje, fijo, dir, desde, hasta } = a.carril
-      const largo = hasta - desde
-      const d = (t * (a.bus ? a.vel * 0.7 : a.vel) + a.desfase * largo) % largo
-      const s = dir > 0 ? desde + d : hasta - d
-      const borde = Math.min(1, (s - desde) / 2, (hasta - s) / 2) // aparecen y se van sin saltar
-      g.scale.setScalar(Math.max(0.001, borde))
-      if (eje === 'x') g.position.set(s, -0.29, fijo)
-      else g.position.set(fijo, -0.29, s)
-      g.rotation.y = eje === 'x' ? (dir > 0 ? 0 : Math.PI) : dir > 0 ? -Math.PI / 2 : Math.PI / 2
+      const { x, z, rot } = enRuta(r, recorrido - vuelta * total)
+      g.position.set(x, -0.29, z)
+      g.rotation.y = rot
     })
   })
   return (
