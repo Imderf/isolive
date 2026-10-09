@@ -3,9 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import { Html, useCursor } from '@react-three/drei'
 import type { Group } from 'three'
 import { PERFILES, estacionDe, type Area, type Persona, type Seleccion } from '../model'
-import { Box, PiezaMesh, capaEtiquetas } from './parts'
+import { Box, PiezaMesh, RED, capaEtiquetas } from './parts'
 
-const W = '#FFFFFF', G300 = '#C7C7C7', INK = '#0A0A0A', RED = '#EF3B3A'
+const W = '#FFFFFF', G2 = '#CBD0DA', SLATE = '#2A303C'
 const PIEL = ['#E9C4A6', '#C9946B', '#8D5A3B']
 const PELO = ['#1A1A1A', '#4D4D4D', '#6B4A32']
 const MAX_EN_ESCRITORIO = 8
@@ -37,7 +37,7 @@ export function Puestos(props: Props) {
             ))}
             {piezas.length > MAX_EN_ESCRITORIO && (
               <Html portal={capaEtiquetas} position={[-0.68, 1.15, 0.12]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
-                <div className="lbl lbl-mini">+{piezas.length - MAX_EN_ESCRITORIO}</div>
+                <div className="pill pill-claro">+{piezas.length - MAX_EN_ESCRITORIO}</div>
               </Html>
             )}
           </group>
@@ -51,15 +51,15 @@ function Escritorio() {
   return (
     <group>
       <Box p={[0, 0.74, 0]} s={[1.5, 0.05, 0.8]} c={W} />
-      <Box p={[-0.72, 0.36, 0]} s={[0.04, 0.72, 0.76]} c={G300} />
-      <Box p={[0.72, 0.36, 0]} s={[0.04, 0.72, 0.76]} c={G300} />
-      <Box p={[0.25, 1.0, -0.25]} s={[0.62, 0.38, 0.03]} c={INK} />
-      <Box p={[0.25, 0.8, -0.25]} s={[0.06, 0.14, 0.06]} c={INK} />
-      <Box p={[0.25, 0.775, 0.1]} s={[0.42, 0.015, 0.14]} c={G300} shadow={false} />
+      <Box p={[-0.7, 0.36, 0]} s={[0.06, 0.72, 0.76]} c={G2} />
+      <Box p={[0.7, 0.36, 0]} s={[0.06, 0.72, 0.76]} c={G2} />
+      <Box p={[0.25, 1.0, -0.25]} s={[0.62, 0.38, 0.04]} c={SLATE} />
+      <Box p={[0.25, 0.8, -0.25]} s={[0.06, 0.14, 0.06]} c={SLATE} />
+      <Box p={[0.25, 0.775, 0.1]} s={[0.42, 0.015, 0.14]} c={G2} shadow={false} />
       {/* silla */}
-      <Box p={[0, 0.46, 0.78]} s={[0.5, 0.06, 0.48]} c={INK} />
-      <Box p={[0, 0.78, 1.0]} s={[0.48, 0.56, 0.05]} c={INK} />
-      <Box p={[0, 0.22, 0.78]} s={[0.05, 0.44, 0.05]} c={INK} />
+      <Box p={[0, 0.46, 0.78]} s={[0.52, 0.08, 0.5]} c={RED} />
+      <Box p={[0, 0.8, 1.0]} s={[0.5, 0.58, 0.08]} c={RED} />
+      <Box p={[0, 0.22, 0.78]} s={[0.06, 0.44, 0.06]} c={G2} />
     </group>
   )
 }
@@ -81,9 +81,9 @@ function Figura({ persona, i, sel, onSelect }: Props & { persona: Persona; i: nu
       onPointerOver={e => { e.stopPropagation(); setHover(true) }}
       onPointerOut={() => setHover(false)}
     >
-      <Box p={[0, 0.56, -0.18]} s={[0.36, 0.14, 0.42]} c="#4D4D4D" />
-      <Box p={[-0.09, 0.28, -0.38]} s={[0.13, 0.48, 0.13]} c="#4D4D4D" />
-      <Box p={[0.09, 0.28, -0.38]} s={[0.13, 0.48, 0.13]} c="#4D4D4D" />
+      <Box p={[0, 0.56, -0.18]} s={[0.36, 0.14, 0.42]} c={SLATE} />
+      <Box p={[-0.09, 0.28, -0.38]} s={[0.13, 0.48, 0.13]} c={SLATE} />
+      <Box p={[0.09, 0.28, -0.38]} s={[0.13, 0.48, 0.13]} c={SLATE} />
       <group ref={torso}>
         <mesh position={[0, 0.92, 0]} castShadow>
           <capsuleGeometry args={[0.19, 0.3, 4, 12]} />
@@ -102,13 +102,13 @@ function Figura({ persona, i, sel, onSelect }: Props & { persona: Persona; i: nu
       </group>
       {selected && (
         <mesh position={[0, 0.03, -0.1]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.55, 0.62, 48]} />
+          <ringGeometry args={[0.5, 0.6, 48]} />
           <meshBasicMaterial color={RED} />
         </mesh>
       )}
       {(hover || selected) && (
         <Html portal={capaEtiquetas} position={[0, 1.75, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="lbl lbl-persona">{persona.nombre}<small>{PERFILES[persona.perfil].nombre}</small></div>
+          <div className="pill pill-oscuro">{persona.nombre}<small>{PERFILES[persona.perfil].nombre}</small></div>
         </Html>
       )}
     </group>

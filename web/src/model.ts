@@ -52,15 +52,14 @@ export interface Area {
 
 export type Seleccion = { tipo: 'persona' | 'pieza' | 'estacion'; id: string }
 
-// Marca Ogilvy: solo rojo, negro, grises y blanco. El rojo se reserva para alertas, cliente y selección.
-// La forma (círculo, medio círculo, cuarto, cuadrado, anillo, achurado) identifica el perfil en la interfaz.
-export const PERFILES: Record<Perfil, { nombre: string; color: string; forma: string }> = {
-  coordinacion: { nombre: 'Coordinación', color: '#0A0A0A', forma: 'circulo' },
-  estrategia: { nombre: 'Estrategia digital', color: '#4D4D4D', forma: 'medio' },
-  diseno: { nombre: 'Diseño gráfico', color: '#8C8C8C', forma: 'cuarto' },
-  copy: { nombre: 'Copy', color: '#C7C7C7', forma: 'cuadrado' },
-  social: { nombre: 'Social media', color: '#FFFFFF', forma: 'anillo' },
-  data: { nombre: 'Data', color: '#1A1A1A', forma: 'achurado' },
+// Estilo WareTrack con el rojo Ogilvy (#EF3B3A) en el papel del azul: familia de rojos + neutros fríos.
+export const PERFILES: Record<Perfil, { nombre: string; color: string }> = {
+  coordinacion: { nombre: 'Coordinación', color: '#1F2430' },
+  estrategia: { nombre: 'Estrategia digital', color: '#8E1F2A' },
+  diseno: { nombre: 'Diseño gráfico', color: '#EF3B3A' },
+  copy: { nombre: 'Copy', color: '#F47C7B' },
+  social: { nombre: 'Social media', color: '#F9A8A8' },
+  data: { nombre: 'Data', color: '#475569' },
 }
 
 export const estacionDe = (a: Area, etapa: string) => a.estaciones.find(e => e.etapas.includes(etapa))!

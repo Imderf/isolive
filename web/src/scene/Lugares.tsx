@@ -1,5 +1,5 @@
 import { estacionDe } from '../model'
-import { Label, PiezaMesh } from './parts'
+import { PiezaMesh, Pin, RED } from './parts'
 import type { Props } from './Puestos'
 
 const ALTURA = { cliente: 0.44, archivo: 0.5, descarte: 0.82, congelador: 1.95 } as Record<string, number>
@@ -28,6 +28,11 @@ export function Lugares({ area, sel, onSelect, etapa }: Props) {
                 onSelect={id => onSelect({ tipo: 'pieza', id })}
               />
             ))}
+            {e.id === 'cliente' && activas.length > 0 && (
+              <>
+                <Pin p={[ax, 1.2, az]} c={RED} s={1.4} />
+              </>
+            )}
             {archivadas > 0 && (
               <>
                 {Array.from({ length: Math.min(archivadas, 12) }, (_, j) => (
@@ -36,9 +41,6 @@ export function Lugares({ area, sel, onSelect, etapa }: Props) {
                     <meshStandardMaterial color={e.color} roughness={0.6} transparent={dim(e.etapas[0])} opacity={dim(e.etapas[0]) ? 0.12 : 1} />
                   </mesh>
                 ))}
-                <Label p={[ax, y + 0.6, az + 0.9]} onClick={() => onSelect({ tipo: 'estacion', id: e.id })}>
-                  <b>{archivadas}</b>
-                </Label>
               </>
             )}
           </group>

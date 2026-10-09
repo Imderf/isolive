@@ -28,9 +28,14 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 - Leer o mostrar `.env` o llaves de servicio.
 - Datos reales en `web/src/mock.ts` (nombres y títulos son inventados).
 
-## Diseño (Ogilvy Design System, Claude Design)
+## Diseño
 
-No negociables de la marca: solo rojo, negro, grises y blanco (ningún otro tono); esquinas rectas y hairlines; sin degradados, texturas, blur, emojis ni rebote; el wordmark es siempre la imagen del logo; serif para títulos, sans para el resto; numeración y kickers en rojo. Iconografía = formas geométricas de la marca (círculo, medio círculo, cuarto, cuadrado, anillo, achurado, cubo). Tokens en `web/src/index.css` (rojo `#EF3B3A`, negros y grises, hairlines, radio 2px). Fuentes Ogilvy Sans/Serif en `web/public/fonts/` (uso interno). Escena isométrica low-poly estilo WareTrack, en clave Ogilvy: fondo gris claro, piso blanco, acentos rojos.
+Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogilvy `#EF3B3A` en el papel del azul**, tipografía **Geist** (no Ogilvy Sans/Serif: la descartó por poco innovadora).
+
+- Escena: objetos redondeados tipo juguete (`RoundedBox`), luz suave, cámara en perspectiva (fov 30), pines de ubicación (gota) y etiquetas en píldora. Sillas, tabiques y remates en rojo; muebles blancos; neutros fríos (`#EDEFF4` de fondo).
+- Interfaz: tarjetas blancas redondeadas (14px) con sombra suave, íconos `lucide-react` en cuadros con tinte, píldoras de estado (verde en vivo / a tiempo, ámbar por vencer, rojo vencida), "Recorrido de la pieza" como el Shipment Tracking, pestañas Actividad/Personas/Estaciones.
+- Del Ogilvy Design System (Claude Design) se conserva: el wordmark como imagen (nunca retipearlo) y el rojo `#EF3B3A`.
+- Tokens en `web/src/index.css`.
 
 ## Comandos
 
@@ -39,5 +44,5 @@ No negociables de la marca: solo rojo, negro, grises y blanco (ningún otro tono
 
 ## Estado
 
-- Ciclo 1 (escena con datos inventados): hecho 2026-10-09, pendiente de validación del look por Imderf.
+- Ciclo 1 (escena con datos inventados): hecho 2026-10-09; rediseñado al look WareTrack el mismo día. Pendiente de validación del look por Imderf.
 - Bundle de producción: 1,2 MB (330 KB gzip), casi todo Three.js. Revisar en el paso 9 (rendimiento).
