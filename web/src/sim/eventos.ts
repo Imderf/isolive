@@ -1,4 +1,5 @@
-import { estacionDe, type Area, type Evento, type Perfil, type Pieza } from '../model.ts'
+import { estacionDe, type Area, type Evento, type Pieza } from '../model.ts'
+import { conTenencias } from './responsable.ts'
 
 // Aplica un evento al estado del área. Es lo único que cambia los datos: el conector real (ciclo 3)
 // y el simulador de prueba entregan eventos con esta misma forma.
@@ -15,9 +16,9 @@ export function aplicar(a: Area, ev: Evento): Area {
   if (ev.tipo === 'creada' && ev.nueva) piezas = [...piezas, ev.nueva]
   let { comentarios } = a
   if (ev.tipo === 'comentario' && ev.texto) {
-    comentarios = [{ id: ev.id, pieza: ev.pieza, autor: ev.actor, texto: ev.texto, fecha: ev.fecha ?? '', hora: ev.hora }, ...comentarios].slice(0, 300)
+    comentarios = [{ id: ev.id, pieza: ev.pieza, autor: ev.actor, texto: ev.texto, menciones: ev.menciones ?? [], fecha: ev.fecha ?? '', hora: ev.hora }, ...comentarios].slice(0, 300)
   }
-  return { ...a, piezas, archivadas, comentarios, eventos: [ev, ...a.eventos].slice(0, 60) }
+  return conTenencias({ ...a, piezas, archivadas, comentarios, eventos: [ev, ...a.eventos].slice(0, 60) })
 }
 
 // ── Simulador de prueba (solo con datos inventados) ───────────────────────────────────────────
@@ -31,10 +32,6 @@ const SIGUIENTE: Record<string, string> = {
   'Validación Cliente': 'Publicación',
   Publicación: 'Seguimiento (Performance)',
   'Seguimiento (Performance)': 'Finalizado',
-}
-// Quién suele trabajar cada estación: si el responsable no es de ese perfil, la pieza cambia de manos.
-const PERFILES_ESTACION: Record<string, Perfil[]> = {
-  datos: ['data'], estrategia: ['estrategia', 'copy'], creativo: ['diseno', 'copy'], publicacion: ['social'],
 }
 const OPERADOR = 'p3' // quien más mueve tarjetas en el tablero
 
@@ -54,7 +51,7 @@ export function simularEvento(a: Area, hora: string, rnd = Math.random, libre = 
     if (p.etapa === 'Ideación' && rnd() < 0.1) hasta = 'Freezing'
     let asignados = p.asignados
     const est = estacionDe(a, hasta)
-    const perfiles = PERFILES_ESTACION[est.id]
+    const perfiles = est.perfiles // si el responsable no es de ese perfil, la pieza cambia de manos
     const actual = a.personas.find(x => x.id === p.asignados[0])
     if (perfiles && actual && !perfiles.includes(actual.perfil)) {
       asignados = [elegir(a.personas.filter(x => perfiles.includes(x.perfil))).id]

@@ -16,6 +16,7 @@ export interface Estacion {
   color: string
   zona: [number, number, number, number] // x1, z1, x2, z2
   ancla: XZ
+  perfiles?: Perfil[] // si se define, solo alguien de estos perfiles puede tener la pieza aquí
 }
 
 export interface Pieza {
@@ -25,6 +26,14 @@ export interface Pieza {
   asignados: string[]
   vence: string // YYYY-MM-DD
   estado: 'normal' | 'urgente' | 'vencida'
+  tiene?: Tenencia // quién la tiene ahora (sim/responsable.ts); decide dónde se dibuja
+}
+
+export interface Tenencia {
+  persona?: string
+  motivo: 'mencion' | 'asignado' | 'comentario' | 'sin-perfil' | 'sin-responsable'
+  por?: string // quien mencionó
+  fecha?: string
 }
 
 export interface Evento {
@@ -40,10 +49,11 @@ export interface Evento {
   asignados?: string[] // nuevos responsables, si el cambio los trae
   nueva?: Pieza // en 'creada'
   texto?: string // en 'comentario': el comentario, recortado y sin enlaces (solo usuarios de Ogilvy)
+  menciones?: string[] // en 'comentario': personas de la mesa mencionadas
 }
 
 // Comentario de una tarea, recortado a 280 caracteres y sin enlaces. Nunca se envía a usuarios cliente.
-export interface Comentario { id: string; pieza: string; autor: string; texto: string; fecha: string; hora: string }
+export interface Comentario { id: string; pieza: string; autor: string; texto: string; menciones: string[]; fecha: string; hora: string }
 
 export interface Area {
   id: string

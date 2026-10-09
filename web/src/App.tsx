@@ -6,6 +6,7 @@ import { disposicion } from './areas/mesa-social-media'
 import type { Area, DatosArea, Seleccion } from './model'
 import { capaEtiquetas } from './scene/parts'
 import { aplicar, simularEvento } from './sim/eventos'
+import { conTenencias } from './sim/responsable'
 import { coreografiar } from './sim/coreografia'
 import { horaTexto } from './sim/horario'
 import { visual } from './sim/visual'
@@ -18,7 +19,7 @@ function componer(d: DatosArea): Area {
   const conocidas = new Set(disposicion.estaciones.flatMap(e => e.etapas))
   const sueltas = d.piezas.filter(p => !conocidas.has(p.etapa))
   if (sueltas.length) console.warn('[Ogilvy Live] Columnas sin estación:', [...new Set(sueltas.map(p => p.etapa))])
-  return { ...disposicion, ...d, etapas: d.etapas.filter(e => conocidas.has(e)), piezas: d.piezas.filter(p => conocidas.has(p.etapa)) }
+  return conTenencias({ ...disposicion, ...d, etapas: d.etapas.filter(e => conocidas.has(e)), piezas: d.piezas.filter(p => conocidas.has(p.etapa)) })
 }
 
 export default function App() {

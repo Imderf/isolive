@@ -103,7 +103,7 @@ function Barrita({ v, max, tono = 'rojo' }: { v: number; max: number; tono?: str
 function Ficha(props: OProps) {
   const { area, sel, onSelect } = props
   const cerrar = () => onSelect(null)
-  const carga = (id: string) => area.piezas.filter(x => x.asignados.includes(id)).length
+  const carga = (id: string) => area.piezas.filter(x => x.tiene?.persona === id).length
   const maxCarga = Math.max(...area.personas.map(p => carga(p.id)))
 
   if (!sel || sel.tipo === 'tablero') {
@@ -117,7 +117,7 @@ function Ficha(props: OProps) {
         <ul className="filas">
           {perfiles.map(pf => {
             const n = area.personas.filter(p => p.perfil === pf).length
-            const piezas = area.piezas.filter(x => personaDe(area, x.asignados[0])?.perfil === pf).length
+            const piezas = area.piezas.filter(x => personaDe(area, x.tiene?.persona)?.perfil === pf).length
             return (
               <li key={pf}><i className="dot" style={{ background: PERFILES[pf].color }} /><span className="grow">{PERFILES[pf].nombre} <small>{n}</small></span><Barrita v={piezas} max={area.piezas.length / 2} /><b>{piezas}</b></li>
             )
@@ -138,18 +138,23 @@ function Ficha(props: OProps) {
   if (sel.tipo === 'persona') {
     const p = personaDe(area, sel.id)
     if (!p) return <Ficha {...props} sel={null} />
-    const suyas = area.piezas.filter(x => x.asignados.includes(p.id))
+    const suyas = area.piezas.filter(x => x.tiene?.persona === p.id)
+    const tambien = area.piezas.filter(x => x.asignados.includes(p.id) && x.tiene?.persona !== p.id)
     const venc = suyas.filter(x => x.estado === 'vencida').length
     return (
       <aside className="card ficha">
         <Cabecera icon={<Users />} kicker={`Persona · ${PERFILES[p.perfil].nombre}`} titulo={p.nombre} onClose={cerrar} />
         <div className="tags"><span className="tag verde"><i className="punto" />En su puesto</span></div>
         <div className="stats">
-          <div><small>Piezas asignadas</small><b>{suyas.length}</b><Barrita v={suyas.length} max={maxCarga} /></div>
+          <div><small>Las tiene ahora</small><b>{suyas.length}</b><Barrita v={suyas.length} max={maxCarga} /></div>
           <div><small>Vencidas</small><b className={venc ? 'txt-rojo' : ''}>{venc}</b><Barrita v={venc} max={Math.max(suyas.length, 1)} /></div>
         </div>
         <h3>Piezas</h3>
         <ListaPiezas piezas={suyas} area={area} onSelect={id => onSelect({ tipo: 'pieza', id })} />
+        {tambien.length > 0 && <>
+          <h3>También aparece como responsable · {tambien.length}</h3>
+          <ListaPiezas piezas={tambien} area={area} onSelect={id => onSelect({ tipo: 'pieza', id })} />
+        </>}
       </aside>
     )
   }
@@ -165,7 +170,8 @@ function Ficha(props: OProps) {
         <Cabecera icon={<Package />} kicker={`Pieza · ${est.nombre}`} titulo={p.titulo} onClose={cerrar} />
         <div className="tags"><span className="tag" style={{ background: est.color, color: '#fff' }}>{p.etapa}</span><span className={`tag ${tono}`}>{txt}</span></div>
         <dl>
-          <dt>Responsables</dt><dd>{p.asignados.map(id => personaDe(area, id)?.nombre).filter(Boolean).join(', ') || 'Sin responsable en la mesa'}</dd>
+          <dt>La tiene ahora</dt><dd>{personaDe(area, p.tiene?.persona)?.nombre ?? 'Nadie de la mesa'}<small className="motivo">{motivo(area, p)}</small></dd>
+          <dt>Responsables en el tablero</dt><dd>{p.asignados.map(id => personaDe(area, id)?.nombre).filter(Boolean).join(', ') || 'Sin responsable de la mesa'}</dd>
           <dt>Fecha límite</dt><dd>{p.vence || 'Sin fecha'}</dd>
           <dt>Estación</dt><dd>{est.nombre}</dd>
         </dl>
@@ -244,7 +250,7 @@ function Recorrido({ area, sel, etapa, onEtapa }: OProps) {
 // Como "Docks / Forklifts / Trucks" de WareTrack.
 function Listas({ area, onSelect }: OProps) {
   const [tab, setTab] = useState<'actividad' | 'personas' | 'estaciones'>('actividad')
-  const carga = (id: string) => area.piezas.filter(x => x.asignados.includes(id)).length
+  const carga = (id: string) => area.piezas.filter(x => x.tiene?.persona === id).length
   const maxCarga = Math.max(...area.personas.map(p => carga(p.id)))
   return (
     <section className="card listas">
@@ -296,10 +302,10 @@ function FichaEtapa(props: OProps & { etapa: string }) {
   const archivadas = area.archivadas[etapa]
   const est = estacionDe(area, etapa)
   const quienes = area.personas
-    .map(p => ({ p, n: piezas.filter(x => x.asignados.includes(p.id)).length }))
+    .map(p => ({ p, n: piezas.filter(x => x.tiene?.persona === p.id).length }))
     .filter(x => x.n > 0)
     .sort((a, b) => b.n - a.n)
-  const sinDueno = piezas.filter(x => !x.asignados.some(id => personaDe(area, id))).length
+  const sinDueno = piezas.filter(x => !x.tiene?.persona).length
   return (
     <aside className="card ficha">
       <Cabecera icon={<Layers />} kicker={`Etapa · ${est.nombre}`} titulo={etapa} onClose={() => onEtapa(null)} />
@@ -317,7 +323,7 @@ function FichaEtapa(props: OProps & { etapa: string }) {
               <b>{n}</b>
             </li>
           ))}
-          {sinDueno > 0 && <li><span className="avatar sm" style={{ background: '#CBD0DA' }}>?</span><span className="grow">Sin responsable de la mesa<small>en la bandeja de {est.nombre.toLowerCase()}</small></span><b>{sinDueno}</b></li>}
+          {sinDueno > 0 && <li><span className="avatar sm" style={{ background: '#CBD0DA' }}>?</span><span className="grow">{est.perfiles ? `Nadie de ${est.perfiles.map(x => PERFILES[x].nombre).join(' o ')} la tiene` : 'Sin responsable de la mesa'}<small>esperan en la bandeja de {est.nombre.toLowerCase()}</small></span><b>{sinDueno}</b></li>}
         </ul>
         <h3>Piezas</h3>
         <ListaPiezas piezas={piezas} area={area} onSelect={id => onSelect({ tipo: 'pieza', id })} />
@@ -360,8 +366,8 @@ function Tablero({ area, onSelect, onEtapa }: OProps) {
                         <span className="t-titulo">{p.titulo}</span>
                         <span className="t-pie">
                           <span className="avatares">
-                            {p.asignados.map(id => personaDe(area, id)).filter(x => !!x).map(x => (
-                              <i key={x.id} className="avatar xs" style={{ background: PERFILES[x.perfil].color }} title={x.nombre}>{iniciales(x.nombre)}</i>
+                            {[...new Set([p.tiene?.persona, ...p.asignados])].map(id => personaDe(area, id)).filter(x => !!x).map(x => (
+                              <i key={x.id} className={`avatar xs${x.id === p.tiene?.persona ? ' tiene' : ''}`} style={{ background: PERFILES[x.perfil].color }} title={x.id === p.tiene?.persona ? `${x.nombre} · la tiene ahora` : x.nombre}>{iniciales(x.nombre)}</i>
                             ))}
                           </span>
                           {p.estado !== 'normal' ? <span className={`tag ${ESTADO[p.estado][1]}`}>{ESTADO[p.estado][0]}</span> : p.vence && <small>{p.vence.slice(8)}/{p.vence.slice(5, 7)}</small>}
@@ -398,4 +404,20 @@ function Comentarios({ area, pieza }: { area: Area; pieza: string }) {
       </ul>
     </>
   )
+}
+
+// Por qué la tiene esa persona (o por qué nadie), en palabras.
+function motivo(area: Area, p: Pieza): string {
+  const t = p.tiene
+  const nombre = (id?: string) => personaDe(area, id)?.nombre ?? 'Alguien'
+  const dia = (f?: string) => (f ? ` el ${f.slice(8)}/${f.slice(5, 7)}` : '')
+  if (!t) return ''
+  if (t.motivo === 'mencion') return `${nombre(t.por)} la mencionó en un comentario${dia(t.fecha)}`
+  if (t.motivo === 'asignado') return 'Responsable asignado en el tablero'
+  if (t.motivo === 'comentario') return `Comentó${dia(t.fecha)}; es de ${estacionDe(area, p.etapa).nombre.toLowerCase()}`
+  if (t.motivo === 'sin-perfil') {
+    const perf = estacionDe(area, p.etapa).perfiles?.map(x => PERFILES[x].nombre).join(' o ')
+    return `Nadie de ${perf} aparece asignado ni mencionado; el tablero la asigna a ${p.asignados.map(id => `${nombre(id)} (${PERFILES[personaDe(area, id)!.perfil].nombre})`).join(' y ')}`
+  }
+  return 'Sin responsable de la mesa'
 }

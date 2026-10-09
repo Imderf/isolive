@@ -9,12 +9,11 @@ const ALTURA = { cliente: 0.44, archivo: 0.5, descarte: 0.82, congelador: 1.95 }
 export function Lugares({ area, sel, onSelect, etapa }: Props) {
   useVisual()
   const lugares = area.estaciones.filter(e => e.tipo === 'lugar')
-  const enMesa = new Set(area.personas.map(p => p.id))
   return (
     <>
-      {/* Bandejas: piezas de estaciones de trabajo sin responsable de la mesa */}
+      {/* Bandejas: piezas de estaciones de trabajo que nadie de la mesa tiene ahora */}
       {area.estaciones.filter(e => e.tipo === 'trabajo').map(e => {
-        const sueltas = area.piezas.filter(p => e.etapas.includes(p.etapa) && !enMesa.has(p.asignados[0]) && !visual.ocultas.has(p.id))
+        const sueltas = area.piezas.filter(p => e.etapas.includes(p.etapa) && !p.tiene?.persona && !visual.ocultas.has(p.id))
         return (
           <group key={e.id}>
             <Box p={[e.ancla[0], 0.25, e.ancla[1]]} s={[1.6, 0.5, 0.6]} c="#FFFFFF" />

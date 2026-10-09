@@ -16,8 +16,8 @@ export function Puestos(props: Props) {
     <>
       {area.puestos.map(pu => {
         const persona = area.personas.find(p => p.puesto === pu.id)
-        // La pieza vive en el puesto de su primer asignado, salvo que su estación sea un lugar.
-        const piezas = persona ? area.piezas.filter(p => p.asignados[0] === persona.id && estacionDe(area, p.etapa).tipo === 'trabajo' && !visual.ocultas.has(p.id)) : []
+        // La pieza vive en el puesto de quien la tiene ahora (sim/responsable.ts), salvo que su estación sea un lugar.
+        const piezas = persona ? area.piezas.filter(p => p.tiene?.persona === persona.id && estacionDe(area, p.etapa).tipo === 'trabajo' && !visual.ocultas.has(p.id)) : []
         return (
           <group key={pu.id} position={[pu.pos[0], 0, pu.pos[1]]} rotation={[0, pu.rot, 0]}>
             <Escritorio />

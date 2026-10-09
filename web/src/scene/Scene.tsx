@@ -42,7 +42,7 @@ function ControlCamara() {
 export function Scene(props: Props) {
   const { area } = props
   const mapa = useMemo(() => construirMapa(area.puestos), [area.puestos])
-  const enEtapa = (id: string) => (props.etapa ? area.piezas.filter(p => p.etapa === props.etapa && p.asignados.includes(id)).length : 0)
+  const enEtapa = (id: string) => (props.etapa ? area.piezas.filter(p => p.etapa === props.etapa && p.tiene?.persona === id).length : 0)
   return (
     <Canvas shadows="soft" dpr={[1, 2]} className="scene" onPointerMissed={() => props.onSelect(null)}>
       <color attach="background" args={['#EDEFF4']} />

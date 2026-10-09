@@ -2,6 +2,7 @@
 // siguen la distribución del tablero Social First (2026-10-09).
 import type { Area, Evento, Persona, Pieza, Perfil } from './model.ts'
 import { disposicion } from './areas/mesa-social-media.ts'
+import { conTenencias } from './sim/responsable.ts'
 
 const etapas = [
   'Señal detectada', 'Identificación/Viabilidad', 'Monitoreo', 'Ideación', 'En producción',
@@ -53,7 +54,7 @@ const piezas: Pieza[] = activas.flatMap(([etapa, cant, quienes]) =>
   }),
 )
 
-export const area: Area = {
+export const area: Area = conTenencias({
   etapas,
   ...disposicion,
   personas,
@@ -70,4 +71,4 @@ export const area: Area = {
     { id: 'v7', hora: '09:31', tipo: 'comentario', actor: 'p9', pieza: 't44' },
     { id: 'v8', hora: '09:15', tipo: 'movida', actor: 'p8', pieza: 't43', desde: 'Validación Cliente', hasta: 'Publicación' },
   ] as Omit<Evento, 'titulo'>[]).map(e => ({ ...e, titulo: piezas.find(p => p.id === e.pieza)!.titulo })),
-}
+})

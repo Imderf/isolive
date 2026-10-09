@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { area } from '../mock.ts'
 import { construirMapa, ruta } from './rutas.ts'
 import { aplicar, simularEvento } from './eventos.ts'
+import { quienLaTiene } from './responsable.ts'
 
 const m = construirMapa(area.puestos)
 for (const n of m.nodos.keys()) if (n !== 'cafe') assert.ok(ruta(m, 'cafe', n).length > 0, `sin ruta del café a ${n}`)
@@ -29,4 +30,13 @@ assert.equal(total(a), inicial + creadas)
 assert.ok(a.piezas.every(p => a.etapas.includes(p.etapa) && !(p.etapa in a.archivadas)))
 assert.ok(a.piezas.every(p => p.asignados.every(id => a.personas.some(x => x.id === id))))
 assert.equal(a.eventos.length, 60)
+// Quién la tiene: en Publicación solo puede ser alguien de Social media.
+const disenador = area.personas.find(x => x.perfil === 'diseno')!.id
+const social = area.personas.find(x => x.perfil === 'social')!.id
+const pub = { ...area.piezas[0], etapa: 'Publicación', asignados: [disenador] }
+assert.equal(quienLaTiene({ ...area, comentarios: [] }, pub).motivo, 'sin-perfil') // diseño no publica: va a la bandeja
+const pedido = { id: 'k', pieza: pub.id, autor: disenador, texto: '@… ¿la publicas?', menciones: [social], fecha: '2026-10-09', hora: '10:00' }
+assert.deepEqual(quienLaTiene({ ...area, comentarios: [pedido] }, pub), { persona: social, motivo: 'mencion', por: disenador, fecha: '2026-10-09' })
+const idea = { ...area.piezas[0], etapa: 'Ideación', asignados: [disenador] }
+assert.equal(quienLaTiene({ ...area, comentarios: [] }, idea).persona, disenador) // en Ideación cualquiera puede tenerla
 console.log(`ok · ${m.nodos.size} nodos · ${creadas} creadas · ${a.piezas.length} activas`)

@@ -19,7 +19,7 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 
 - **Lo real manda, el ambiente decora.** Eventos reales (pieza movida, creada, comentada, aprobada, ajuste) mandan. Baño, café y estirarse son decoración: nunca aparecen en la ficha de una persona ni en el feed.
 - **Presencia por horario laboral** (L–V, America/Bogota): en su puesto; fuera de horario, vacío. No usar la presencia del socket del TaskBoard.
-- **La pieza vive en el puesto de su primer asignado.** Estaciones tipo `lugar` (sala de cliente, archivo) guardan sus piezas ahí. Quien opera el tablero aparece en el muro Kanban.
+- **La pieza vive en el puesto de quien la tiene ahora** (`web/src/sim/responsable.ts`): 1) la persona mencionada más recientemente en sus comentarios, si su perfil encaja con la estación; 2) el responsable asignado que encaje; 3) quien comentó más recientemente y encaje; 4) si la estación exige perfil (`perfiles` en la disposición: Publicación → Social media, Muro de datos → Data, Estudio creativo → Diseño/Copy) y nadie encaja, espera en la bandeja de la estación. La ficha dice quién la tiene y por qué. Estaciones tipo `lugar` (sala de cliente, archivo) guardan sus piezas ahí. Quien opera el tablero aparece en el muro Kanban.
 - **Clientes:** ven solo sus áreas, sin nombres de personas (avatar por perfil). El filtro se aplica en el servidor, nunca solo en el navegador.
 - Comentarios: el texto llega recortado (280 caracteres, sin enlaces) y es **solo para usuarios de Ogilvy**; el filtro del ciclo 5 lo quita para clientes en el servidor. Sin adjuntos. Sin agencia de cada persona.
 - Marcas de zona compactas (número o ícono); el texto se abre al pasar el mouse o con la zona elegida.
