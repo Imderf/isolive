@@ -17,35 +17,46 @@ function lugarDe(a: Area, p: Pieza): { nodo: string; pos: V3; color: string } {
   return { nodo: `asiento:${pu.id}`, pos: [pu.pos[0] - 0.4, 0.85, pu.pos[1] + 0.12], color: est.color }
 }
 
+// Alguien lleva la pieza de donde se veía antes a donde se ve ahora (si cambió de lugar).
+function llevar(antes: Area, despues: Area, id: string, actor: string, etapaNueva?: string) {
+  const p0 = antes.piezas.find(p => p.id === id)
+  if (!p0) return null
+  const p1 = despues.piezas.find(p => p.id === id) // no existe si se archivó
+  const origen = lugarDe(antes, p0)
+  const est = etapaNueva ? estacionDe(despues, etapaNueva) : estacionDe(despues, p0.etapa)
+  const destino = p1 ? lugarDe(despues, p1) : { nodo: est.id, color: est.color }
+  const cargador = (p1 ?? p0).tiene?.persona ?? actor
+  if (origen.nodo === destino.nodo) return { cargador, movio: false }
+  cambiar(() => {
+    visual.fantasmas.set(p0.id, { p: origen.pos, color: origen.color })
+    if (p1) visual.ocultas.add(p0.id)
+  })
+  encolar(cargador, [
+    { ir: origen.nodo },
+    { recoger: p0.id, color: destino.color },
+    { ir: destino.nodo, jitter: destino.nodo === 'cliente' },
+    { esperar: 1, pose: 'parado', mira: destino.nodo },
+    { dejar: p0.id },
+  ])
+  return { cargador, movio: true }
+}
+
 // Traduce un evento real a movimiento. Lo real manda: estas órdenes se atienden antes que la vida de oficina.
 export function coreografiar(antes: Area, despues: Area, ev: Evento) {
   if (!enHorario()) return
-  if (ev.tipo === 'comentario') return burbuja(ev.actor, ev.texto ? `«${ev.texto.length > 48 ? ev.texto.slice(0, 47) + '…' : ev.texto}»` : 'Comentó', 7)
   if (ev.tipo === 'creada') return burbuja(ev.actor, 'Nueva señal')
-  if (ev.tipo !== 'movida' || !ev.hasta) return
-
-  const p0 = antes.piezas.find(p => p.id === ev.pieza)
-  if (!p0) return
-  const p1 = despues.piezas.find(p => p.id === ev.pieza) // no existe si se archivó
-  const est = estacionDe(despues, ev.hasta)
-  const origen = lugarDe(antes, p0)
-  const destino = p1 ? lugarDe(despues, p1) : { nodo: est.id, color: est.color }
-  const cargador = (p1 ?? p0).tiene?.persona ?? ev.actor
-
-  if (origen.nodo === destino.nodo) burbuja(cargador, `→ ${ev.hasta}`)
-  else {
-    cambiar(() => {
-      visual.fantasmas.set(p0.id, { p: origen.pos, color: origen.color })
-      if (p1) visual.ocultas.add(p0.id)
-    })
-    encolar(cargador, [
-      { ir: origen.nodo },
-      { recoger: p0.id, color: destino.color },
-      { ir: destino.nodo, jitter: destino.nodo === 'cliente' },
-      { esperar: 1, pose: 'parado', mira: destino.nodo },
-      { dejar: p0.id },
-    ])
+  if (ev.tipo === 'comentario') {
+    burbuja(ev.actor, ev.texto ? `«${ev.texto.length > 48 ? ev.texto.slice(0, 47) + '…' : ev.texto}»` : 'Comentó', 7)
+    // Si el comentario le pasa la pieza a otra persona (una mención), esa persona va por ella.
+    const t0 = antes.piezas.find(p => p.id === ev.pieza)?.tiene?.persona
+    const t1 = despues.piezas.find(p => p.id === ev.pieza)?.tiene?.persona
+    if (t1 && t1 !== t0) llevar(antes, despues, ev.pieza, ev.actor)
+    return
   }
+  if (ev.tipo !== 'movida' || !ev.hasta) return
+  const r = llevar(antes, despues, ev.pieza, ev.actor, ev.hasta)
+  if (!r) return
+  if (!r.movio) burbuja(r.cargador, `→ ${ev.hasta}`)
   // Quien opera el tablero aparece en el muro Kanban.
-  if (ev.actor !== cargador) encolar(ev.actor, [{ ir: 'kanban', jitter: true }, { esperar: 5, pose: 'tablero', mira: 'kanban' }])
+  if (ev.actor !== r.cargador) encolar(ev.actor, [{ ir: 'kanban', jitter: true }, { esperar: 5, pose: 'tablero', mira: 'kanban' }])
 }

@@ -9,7 +9,7 @@ import type { Props } from '../scene/Puestos'
 const iniciales = (n: string) => n.split(' ').slice(0, 2).map(x => x[0]).join('')
 const ESTADO = { vencida: ['Vencida', 'rojo'], urgente: ['Por vencer', 'ambar'], normal: ['A tiempo', 'verde'] } as const
 
-type OProps = Props & { onEtapa: (e: string | null) => void; modo: Modo }
+type OProps = Props & { onEtapa: (e: string | null) => void; modo: Modo; vivo: boolean }
 
 const deHoy = (ev: Evento) => !ev.fecha || ev.fecha === fechaHoy()
 // Hoy se ve la hora; días anteriores, la fecha (DD/MM).
@@ -40,7 +40,7 @@ export function Overlay(props: OProps) {
   )
 }
 
-function Barra({ area, onSelect, modo }: OProps) {
+function Barra({ area, onSelect, modo, vivo }: OProps) {
   const [reloj, setReloj] = useState(horaTexto)
   const [q, setQ] = useState('')
   useEffect(() => { const t = setInterval(() => setReloj(horaTexto()), 20_000); return () => clearInterval(t) }, [])
@@ -65,7 +65,7 @@ function Barra({ area, onSelect, modo }: OProps) {
           <span><b>{area.nombre}</b><small>{area.cliente} · {area.personas.length} personas</small></span>
           <ChevronDown />
         </button>
-        <span className="tag verde"><i className="punto" />En vivo · {reloj}</span>
+        {vivo ? <span className="tag verde"><i className="punto" />En vivo · {reloj}</span> : <span className="tag ambar"><i className="punto" />Reconectando…</span>}
         {!enHorario() && <span className="tag gris">Fuera de horario · puestos vacíos</span>}
         {modo === 'prueba' ? <span className="tag ambar">Datos de prueba · simulación</span> : <span className="tag gris">TaskBoard · Social First</span>}
         <div className="user"><span className="avatar">IR</span><span><b>Imderf Ríos</b><small>Coordinación general</small></span></div>

@@ -12,7 +12,7 @@ export interface ConfigArea {
 export interface Origen { url: string; token: string }
 
 export interface ComentarioTB { id: string; authorId: string; text: string; mentions: string[]; createdAt: string }
-interface Estado {
+export interface Estado {
   lists: { id: string; name: string }[]
   cards: {
     id: string; title: string; listId: string; dueDate: string | null; completedAt: string | null
@@ -50,14 +50,18 @@ export function mencionesEnTexto(texto: string, personas: { id: string; nombres:
   return personas.filter(p => p.nombres.some(n => t.includes(`@${n}`))).map(p => p.id)
 }
 
-export async function leerArea(cfg: ConfigArea, o: Origen, ahora = new Date()): Promise<DatosArea> {
-  const p = cfg.conector.proyecto
-  const desde = new Date(ahora.getTime() - 3 * 86_400_000).toISOString() // feed inicial: últimos 3 días
-  const [estado, actividad] = await Promise.all([
-    pedir<Estado>(o, `/projects/${p}/state`),
-    pedir<Actividad[]>(o, `/projects/${p}/activity?since=${encodeURIComponent(desde)}`),
-  ])
-  return traducir(cfg, estado, actividad, ahora)
+export const leerEstado = (cfg: ConfigArea, o: Origen) => pedir<Estado>(o, `/projects/${cfg.conector.proyecto}/state`)
+// Actividad posterior a `desde` (ISO), en orden; el management devuelve hasta 200 por consulta.
+export const leerActividad = (cfg: ConfigArea, o: Origen, desde: string) =>
+  pedir<Actividad[]>(o, `/projects/${cfg.conector.proyecto}/activity?since=${encodeURIComponent(desde)}`)
+
+// Completa un evento nuevo con lo que el web necesita para aplicarlo y animarlo sin esperar el estado.
+export function enriquecer(e: Evento, d: DatosArea): Evento {
+  const pieza = d.piezas.find(p => p.id === e.pieza)
+  if (e.tipo === 'movida' && pieza) return { ...e, asignados: pieza.asignados }
+  if (e.tipo === 'creada' && pieza) return { ...e, nueva: pieza }
+  if (e.tipo === 'comentario') return { ...e, menciones: d.comentarios.find(c => c.pieza === e.pieza && c.texto === e.texto)?.menciones ?? [] }
+  return e
 }
 
 export function traducir(cfg: ConfigArea, estado: Estado, actividad: Actividad[], ahora: Date): DatosArea {

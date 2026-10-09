@@ -7,7 +7,7 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 ## Estructura
 
 - `web/` — React 19 + Vite + React Three Fiber. Escena y overlay.
-- `server/` — Node 24 + Express, corre el `.ts` directo (sin compilar). Guarda la llave del TaskBoard y traduce cada plataforma al modelo común (`src/taskboard.ts`). Áreas en `server/areas/*.json` (proyecto, columnas de archivo, persona → perfil + puesto). Login, roles, filtro de privacidad y SSE llegan en los ciclos 4–5.
+- `server/` — Node 24 + Express, corre el `.ts` directo (sin compilar). Guarda la llave del TaskBoard y traduce cada plataforma al modelo común (`src/taskboard.ts`). Áreas en `server/areas/*.json` (proyecto, columnas de archivo, persona → perfil + puesto). En vivo (`src/vivo.ts`): sondea `/activity` cada 5 s; si hay actividad trae el estado fresco y empuja `evento` (enriquecido) y `estado` por SSE (`/api/areas/:id/eventos`); refresca el estado cada 60 s y `/api/areas/:id` sirve la caché. Login, roles y filtro de privacidad llegan en el ciclo 5.
 - `web/src/areas/*.ts` — disposición 3D de cada área (estaciones, etapas, puestos, bandejas).
 - `docs/areas/` — una ficha por área. `docs/referencias/` — WareTrack, Gather, Naos.
 
@@ -66,4 +66,5 @@ Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogi
   - Piezas sin responsable de la mesa (13 de 45 en Social First) esperan en la bandeja de su estación.
   - Comentarios: ruta `/api/live/projects/:id/comments?since=` (7 días por defecto); el servidor los cruza con `comment.added` (misma tarjeta y autor, ±10 s).
   - Vista del tablero completo (clic en el muro Kanban) y vista por etapa (quién trabaja en ella, con aro y conteo en la escena).
+- Ciclo 4 (eventos en vivo): hecho 2026-10-09. Probado con una copia de la base (`taskboard-live-api-prueba`) insertando actividad: el evento aparece en la escena en ~5 s. Un comentario que menciona a alguien de la mesa le pasa la pieza y esa persona va por ella.
 - Bundle de producción: 1,2 MB (330 KB gzip), casi todo Three.js. Revisar en el paso 9 (rendimiento).

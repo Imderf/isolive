@@ -1,6 +1,6 @@
 // Chequeo del conector: node src/taskboard.check.ts
 import assert from 'node:assert/strict'
-import { estadoDe, mencionesEnTexto, traducir, type ConfigArea } from './taskboard.ts'
+import { enriquecer, estadoDe, mencionesEnTexto, traducir, type ConfigArea } from './taskboard.ts'
 
 assert.equal(estadoDe('', '2026-10-09'), 'normal')
 assert.equal(estadoDe('2026-10-08', '2026-10-09'), 'vencida')
@@ -50,4 +50,7 @@ assert.equal(d.eventos[1].hora, '10:30') // hora de Bogotá; más nuevo primero
 assert.equal(d.eventos[0].texto, '@Beto Paz ya quedó, @Ana Ruiz súbela') // el comentario se cruza con su evento
 assert.equal(d.comentarios.length, 1) // solo autores de la mesa
 assert.deepEqual(d.comentarios[0].menciones.sort(), ['u1', 'u2']) // menciones escritas a mano
+// Un evento nuevo llega listo para aplicarse: responsables al moverse, menciones al comentar.
+assert.deepEqual(enriquecer(d.eventos[1], d).asignados, ['u2'])
+assert.deepEqual(enriquecer(d.eventos[0], d).menciones?.sort(), ['u1', 'u2'])
 console.log('ok · conector TaskBoard')
