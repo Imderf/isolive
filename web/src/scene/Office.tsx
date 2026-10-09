@@ -180,15 +180,16 @@ function Banos() {
           <Box p={[0, 0.0, 0]} s={[0.06, 0.12, 0.01]} c={BLANCO} r={0} shadow={false} />
         </group>
       ))}
-      {/* cubículos con inodoro */}
-      {[12.9, 13.6].map(x => (
+      {/* cubículos con inodoro contra el muro norte, mirando hacia la cámara */}
+      {[13.05, 13.65].map(x => (
         <group key={x}>
-          <mesh position={[x, 0.15, 9.62]} castShadow><cylinderGeometry args={[0.11, 0.13, 0.3, 16]} /><meshStandardMaterial color={BLANCO} roughness={0.3} /></mesh>
-          <mesh position={[x, 0.33, 9.6]} castShadow><cylinderGeometry args={[0.17, 0.15, 0.08, 20]} /><meshStandardMaterial color={BLANCO} roughness={0.3} /></mesh>
-          <Box p={[x, 0.5, 9.86]} s={[0.36, 0.32, 0.12]} c={BLANCO} />
+          <Box p={[x, 0.5, 8.43]} s={[0.36, 0.34, 0.12]} c={BLANCO} />
+          <mesh position={[x, 0.15, 8.66]} castShadow><cylinderGeometry args={[0.11, 0.13, 0.3, 16]} /><meshStandardMaterial color={BLANCO} roughness={0.3} /></mesh>
+          <mesh position={[x, 0.33, 8.7]} castShadow><cylinderGeometry args={[0.17, 0.15, 0.08, 20]} /><meshStandardMaterial color={BLANCO} roughness={0.3} /></mesh>
+          <mesh position={[x, 0.38, 8.7]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.07, 0.16, 20]} /><meshStandardMaterial color="#94A3B8" /></mesh>
         </group>
       ))}
-      {[12.55, 13.25, 13.95].map(x => <Box key={x} p={[x, 0.5, 9.5]} s={[0.04, 1.0, 0.9]} c={MURO} />)}
+      <Box p={[12.72, 0.4, 8.75]} s={[0.04, 0.8, 0.8]} c={MURO} />
       {/* lavamanos con espejo */}
       <Box p={[10.85, 0.4, 9.35]} s={[0.5, 0.8, 1.1]} c={BLANCO} />
       {[9.1, 9.6].map(z => (
