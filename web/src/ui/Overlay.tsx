@@ -19,9 +19,11 @@ const cuando = (ev: Evento) => (deHoy(ev) ? ev.hora : `${ev.fecha!.slice(8)}/${e
 
 export function Overlay(props: OProps) {
   const { area } = props
+  const [entrando, setEntrando] = useState(true) // entrada escalonada solo la primera vez
+  useEffect(() => { const t = setTimeout(() => setEntrando(false), 1600); return () => clearTimeout(t) }, [])
   const vencidas = area.piezas.filter(p => p.estado === 'vencida').length
   return (
-    <div className="ui">
+    <div className={`ui${entrando ? ' entrando' : ''}`}>
       <Barra {...props} />
       <section className="kpis">
         <Kpi icon={<Package />} n={area.piezas.length} t="Piezas activas" sub={`en ${area.estaciones.filter(e => e.tipo === 'trabajo').length} estaciones`} />

@@ -108,9 +108,9 @@ export default function App() {
       {modo === 'cargando'
         ? <div className="cargando"><img src="/ogilvy-logo.png" alt="Ogilvy" /><span>Conectando con el tablero…</span></div>
         : <>
-          <div ref={capaEtiquetas} className="etiquetas" />
-          <Scene area={area} sel={sel} onSelect={setSel} etapa={etapa} />
-          <Overlay area={area} sel={sel} onSelect={setSel} etapa={etapa} onEtapa={setEtapa} modo={modo} vivo={vivo} onArea={elegirArea} />
+          <div ref={capaEtiquetas} className={`etiquetas${intro === 'fin' ? '' : ' ocultas'}`} />
+          <Scene area={area} sel={sel} onSelect={setSel} etapa={etapa} entrada={intro !== 'fin'} />
+          {intro === 'fin' && <Overlay area={area} sel={sel} onSelect={setSel} etapa={etapa} onEtapa={setEtapa} modo={modo} vivo={vivo} onArea={elegirArea} />}
         </>}
       {intro === 'ascensor' && <Ascensor listo={modo !== 'cargando'} onFin={terminarIntro} onSaltar={terminarIntro} />}
     </>

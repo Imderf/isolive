@@ -19,7 +19,20 @@ svg { width: 16px; height: 16px; stroke-width: 2; }
 :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
 .scene { position: fixed !important; inset: 0; }
-.etiquetas { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+.etiquetas { position: fixed; inset: 0; pointer-events: none; z-index: 1; transition: opacity .7s ease .2s; }
+.etiquetas.ocultas { opacity: 0; }
+/* Entrada de la interfaz al salir del ascensor (solo la primera vez) */
+.ui.entrando > * { animation: entra .7s var(--ease) both; }
+.ui.entrando > .top { animation-name: entra-arriba; }
+.ui.entrando > .kpis { animation-delay: .1s; }
+.ui.entrando > .mapa-ctrl { animation-delay: .18s; }
+.ui.entrando > .ficha { animation-name: entra-derecha; animation-delay: .22s; }
+.ui.entrando > .recorrido { animation-name: entra-abajo; animation-delay: .3s; }
+.ui.entrando > .listas { animation-name: entra-derecha; animation-delay: .38s; }
+@keyframes entra { from { opacity: 0; transform: translateY(10px); } }
+@keyframes entra-arriba { from { opacity: 0; transform: translateY(-16px); } }
+@keyframes entra-derecha { from { opacity: 0; transform: translateX(24px); } }
+@keyframes entra-abajo { from { opacity: 0; transform: translateY(20px); } }
 .ui { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
 .ui > * { pointer-events: auto; }
 .card { position: fixed; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); }
@@ -230,9 +243,9 @@ q { quotes: '«' '»'; color: var(--ink); font-style: italic; }
 /* Ascensor: interior de la cabina mirando a las puertas (en % de la pantalla: muro de frente 24–76 × 11–90, vano 34–66 × 20–90) */
 .cabina { position: fixed; inset: 0; z-index: 11; pointer-events: none; opacity: 0; transition: opacity .45s var(--ease); }
 .cabina.visible { opacity: 1; }
-.cab-escena { position: absolute; inset: 0; transition: transform 1.3s cubic-bezier(.55, 0, .25, 1) .4s, opacity .8s ease .8s; }
+.cab-escena { position: absolute; inset: 0; transition: transform 1s cubic-bezier(.4, 0, .2, 1) .55s, opacity .6s ease .75s; }
 .cabina.viajando .cab-escena { animation: vaiven .9s ease-in-out infinite; }
-.cabina.abierta .cab-escena { transform: scale(2.6); opacity: 0; }
+.cabina.abierta .cab-escena { transform: scale(1.12); opacity: 0; }
 @keyframes vaiven { 50% { transform: translateY(1.5px); } }
 .cab-techo, .cab-pared, .cab-piso { position: absolute; inset: 0; }
 .cab-techo { clip-path: polygon(0 0, 100% 0, 76% 11%, 24% 11%); background: linear-gradient(180deg, #DADDE3, #F3F4F6); }
@@ -253,6 +266,10 @@ q { quotes: '«' '»'; color: var(--ink); font-style: italic; }
   background: linear-gradient(180deg, rgba(255, 255, 255, .35), transparent 22%), repeating-linear-gradient(90deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 3px), linear-gradient(100deg, #C2C9D2, #EDF0F4 40%, #CDD3DB 65%, #B7BEC9); }
 .cab-vano .hoja.izq { box-shadow: inset -1px 0 0 rgba(31, 36, 48, .45); }
 .cab-vano .hoja.der { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .6); }
+.cabina.abierta .hoja { transition-delay: .12s; }
+.cab-vano::after { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: #FFF6E3; box-shadow: 0 0 26px 12px rgba(255, 244, 222, .85); opacity: 0; pointer-events: none; }
+.cabina.abierta .cab-vano::after { animation: rendija .8s ease-out both; }
+@keyframes rendija { 25% { opacity: 1; } 100% { opacity: 0; width: 70%; margin-left: -35%; } }
 .cabina.abierta .hoja.izq { transform: translateX(-101%); }
 .cabina.abierta .hoja.der { transform: translateX(101%); }
 .cab-display { position: absolute; left: 50%; top: 5.7%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 1vmin; height: 5.4vmin; padding: 0 1.8vmin; border-radius: 1vmin; background: #0C0E13; box-shadow: inset 0 0 0 1px #2C3142, 0 3px 10px rgba(0, 0, 0, .35); color: #fff; white-space: nowrap; }

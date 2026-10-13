@@ -259,7 +259,7 @@ function Arboles() {
       for (let i = 1; i < c.puntos.length; i++) {
         const [ax, az] = c.puntos[i - 1], [bx, bz] = c.puntos[i]
         const largo = Math.hypot(bx - ax, bz - az), nx = -(bz - az) / largo, nz = (bx - ax) / largo
-        for (let s = 6; s < largo; s += 13) for (const l of [-1, 1]) {
+        for (let s = 10; s < largo; s += 24) for (const l of [-1, 1]) {
           const p: P = [ax + ((bx - ax) * s) / largo + nx * l * (c.ancho / 2 + 2), az + ((bz - az) * s) / largo + nz * l * (c.ancho / 2 + 2)]
           if (Math.hypot(p[0] - puerta[0], p[1] - puerta[1]) < 16) continue
           if (entorno.edificios.some(b => dentro(p, b.puntos as P[]))) continue

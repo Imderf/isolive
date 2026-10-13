@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { ArrowUp } from 'lucide-react'
+import { moverCamara } from '../scene/Scene'
 
 const PISOS = [7, 6, 5, 4, 3, 2, 1]
 
 // Interior de la cabina, mirando a las puertas: techo con luz, paredes de acero, botonera con el piso 4 encendido y
-// pantalla con el piso. Cerrada tapa el cambio de escena; al llegar abre y la cabina se agranda y se desvanece,
-// como si uno saliera a la oficina.
+// pantalla con el piso. Cerrada tapa el cambio de escena. Al llegar brilla la rendija, se abren las puertas sobre la
+// oficina vista desde la entrada (la cámara 3D sube a la vista de siempre) y la cabina avanza un poco y se desvanece.
 export function Cabina({ piso, rotulo, visible = true, viajando = false, abierta = false }: {
   piso: number; rotulo?: string; visible?: boolean; viajando?: boolean; abierta?: boolean
 }) {
@@ -43,15 +44,15 @@ export function Ascensor({ listo, onFin, onSaltar }: { listo: boolean; onFin: ()
   useEffect(() => {
     if (piso < 4) { const t = setTimeout(() => setPiso(p => p + 1), 560); return () => clearTimeout(t) }
     if (!listo) return
-    const t1 = setTimeout(() => setAbierta(true), 650)
-    const t2 = setTimeout(onFin, 650 + 1300)
+    const t1 = setTimeout(() => { setAbierta(true); moverCamara('salir') }, 650)
+    const t2 = setTimeout(onFin, 650 + 1450)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [piso, listo, onFin])
   const rotulo = piso === 4 ? (listo ? 'Ogilvy · Piso 4' : 'Conectando con el tablero…') : undefined
   return (
     <>
       <Cabina piso={piso} rotulo={rotulo} viajando={piso < 4} abierta={abierta} />
-      {!abierta && <button className="saltar" onClick={onSaltar}>Saltar intro</button>}
+      {!abierta && <button className="saltar" onClick={() => { moverCamara('salir'); onSaltar() }}>Saltar intro</button>}
     </>
   )
 }
