@@ -62,6 +62,8 @@ export interface Area {
   id: string
   nombre: string
   cliente: string
+  fuente?: string // de dónde salen los datos (barra superior)
+  siempreEnHorario?: boolean // demo: la mesa siempre está trabajando
   etapas: string[]
   estaciones: Estacion[]
   puestos: Puesto[]
@@ -72,6 +74,9 @@ export interface Area {
   eventos: Evento[]
   comentarios: Comentario[] // recientes (7 días), más nuevo primero
 }
+
+// Lo que pone el web de cada área: identidad y disposición 3D del piso.
+export type Disposicion = Pick<Area, 'id' | 'nombre' | 'cliente' | 'fuente' | 'siempreEnHorario' | 'estaciones' | 'puestos' | 'visitas'>
 
 // Lo que entrega un conector (servidor); la disposición 3D la pone el web.
 export type DatosArea = Pick<Area, 'etapas' | 'personas' | 'piezas' | 'archivadas' | 'eventos' | 'comentarios'>

@@ -68,7 +68,7 @@ export function simularEvento(a: Area, hora: string, rnd = Math.random, libre = 
 
   const autor = elegir(a.personas.filter(x => x.perfil === 'data'))
   const nueva: Pieza = {
-    id: `n${n}`, titulo: `Señal · ${elegir(['búsquedas en alza', 'conversación viral', 'meme del día', 'pico de menciones'])} · ${elegir(['Dove', 'Sedal', "Pond's", 'Fruco', 'Rexona'])}`,
+    id: `n${n}`, titulo: `Señal · ${elegir(['búsquedas en alza', 'conversación viral', 'meme del día', 'pico de menciones'])} · ${elegir(['cuidado del cabello', 'snacks', 'bebidas', 'cuidado de la piel', 'hogar'])}`,
     etapa: 'Señal detectada', asignados: [autor.id], vence: '2026-10-24', estado: 'normal',
   }
   return { id, hora, tipo: 'creada', actor: autor.id, pieza: nueva.id, titulo: nueva.titulo, nueva }

@@ -18,7 +18,10 @@ function calcular() {
 let actual = calcular()
 setInterval(() => { actual = calcular() }, 20_000)
 
-export const enHorario = () => actual.laboral
+// La Mesa Demo siempre está en horario (se fija al elegir el área).
+let siempre = false
+export const fijarSiempreEnHorario = (v: boolean) => { siempre = v }
+export const enHorario = () => siempre || actual.laboral
 export const fechaHoy = () => actual.fecha
 export const horaDecimal = () => actual.h + actual.m / 60
 export const esFinde = () => actual.finde

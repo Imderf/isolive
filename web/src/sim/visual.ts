@@ -22,6 +22,8 @@ export const visual = {
 const subs = new Set<() => void>()
 let version = 0
 export function cambiar(f: () => void) { f(); version++; subs.forEach(s => s()) }
+// Al cambiar de área no queda nada a medio camino.
+export const reiniciarVisual = () => cambiar(() => { visual.ocultas.clear(); visual.fantasmas.clear(); visual.enMano.clear(); visual.ordenes.clear(); visual.burbujas.clear() })
 export const useVisual = () => useSyncExternalStore(cb => { subs.add(cb); return () => { subs.delete(cb) } }, () => version)
 
 export function encolar(persona: string, plan: Paso[]) {

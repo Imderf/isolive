@@ -9,6 +9,8 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 - `web/` — React 19 + Vite + React Three Fiber. Escena y overlay.
 - `server/` — Node 24 + Express, corre el `.ts` directo (sin compilar). Guarda la llave del TaskBoard y traduce cada plataforma al modelo común (`src/taskboard.ts`). Áreas en `server/areas/*.json` (proyecto, columnas de archivo, persona → perfil + puesto). En vivo (`src/vivo.ts`): sondea `/activity` cada 5 s; si hay actividad trae el estado fresco y empuja `evento` (enriquecido) y `estado` por SSE (`/api/areas/:id/eventos`); refresca el estado cada 60 s y `/api/areas/:id` sirve la caché. Login, roles y filtro de privacidad llegan en el ciclo 5.
 - `web/src/areas/*.ts` — disposición 3D de cada área (estaciones, etapas, puestos, bandejas).
+- Áreas del desplegable: `web/src/areas/index.ts` (la elegida queda en `?area=`). Servidor: un `server/areas/*.json` por área; un área sin personas no se sirve y el web la muestra con datos de prueba.
+- **Mesa Demo** (`mesa-demo`): lee el proyecto "Mesa Demo" del TaskBoard (cliente Ogilvy en el management; personas y piezas inventadas, sin marcas de clientes) y siempre está en horario. La actividad continua la genera un motor demo dentro del management (rama `ogilvy-live`, `server/src/lib/demo.ts`, pendiente de aprobación). Las cuentas demo las crea Imderf con correos `digital.colombia+<perfil>N@ogilvy.com`.
 - `docs/areas/` — una ficha por área. `docs/referencias/` — WareTrack, Gather, Naos.
 
 ## Modelo común (`web/src/model.ts`)

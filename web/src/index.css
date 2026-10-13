@@ -41,7 +41,7 @@ small { color: var(--muted); }
 @keyframes pulso { 50% { opacity: .3; } }
 
 /* Barra superior */
-.top { position: fixed; top: 12px; left: 12px; right: 12px; height: 60px; display: flex; align-items: center; gap: 20px; padding: 0 12px 0 18px; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); }
+.top { position: fixed; z-index: 3; top: 12px; left: 12px; right: 12px; height: 60px; display: flex; align-items: center; gap: 20px; padding: 0 12px 0 18px; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand img { height: 22px; display: block; }
 .brand span { font-weight: 700; font-size: 18px; letter-spacing: -.02em; padding-left: 10px; border-left: 1px solid var(--line); }
@@ -51,6 +51,13 @@ small { color: var(--muted); }
 .selector { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 10px 0 6px; border: 1px solid var(--line); border-radius: 12px; text-align: left; }
 .selector b, .user b { display: block; font-size: 13px; white-space: nowrap; }
 .selector small, .user small { display: block; font-size: 11px; }
+.selector-caja { position: relative; }
+.menu-areas { position: absolute; top: 52px; right: 0; z-index: 50; min-width: 300px; margin: 0; padding: 6px; list-style: none; }
+.menu-areas button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border-radius: 10px; text-align: left; }
+.menu-areas button:hover { background: #F2F3F6; }
+.menu-areas b { display: block; font-size: 13px; }
+.menu-areas small { display: block; font-size: 11px; color: var(--muted); }
+.menu-areas svg { width: 16px; height: 16px; margin-left: auto; color: var(--red); }
 .sq { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--red); color: #fff; font-weight: 700; font-size: 12px; }
 .user { display: flex; align-items: center; gap: 10px; padding-left: 12px; margin-left: 4px; border-left: 1px solid var(--line); }
 .avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 600; font-size: 12px; flex: none; }

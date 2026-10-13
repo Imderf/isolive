@@ -1,0 +1,6 @@
+{
+  "id": "mesa-demo",
+  "conector": { "tipo": "taskboard", "proyecto": "cmv61irt0000ks6klb6v3lpw4" },
+  "archivo": ["Finalizado", "No Aprobado", "Freezing"],
+  "personas": []
+}

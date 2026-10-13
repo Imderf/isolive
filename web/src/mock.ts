@@ -1,5 +1,6 @@
-// Datos inventados para el ciclo 1. Nombres y títulos no son reales; las cantidades por etapa sí
-// siguen la distribución del tablero Social First (2026-10-09).
+// Datos inventados: los usan la Mesa Demo (simulador del servidor) y el modo de prueba sin servidor.
+// Nombres y títulos no son reales y no nombran marcas de clientes; las cantidades por etapa siguen la
+// distribución del tablero Social First (2026-10-09).
 import type { Area, Evento, Persona, Pieza, Perfil } from './model.ts'
 import { disposicion } from './areas/mesa-social-media.ts'
 import { conTenencias } from './sim/responsable.ts'
@@ -13,9 +14,9 @@ const personas: Persona[] = (
   [
     ['Laura Méndez', 'coordinacion', 'k1'], ['Andrés Pardo', 'coordinacion', 'k2'],
     ['Felipe Rojas', 'estrategia', 'e1'], ['Natalia Cruz', 'estrategia', 'e2'],
-    ['Camilo Torres', 'diseno', 'c1'], ['Valentina Ríos', 'diseno', 'c2'], ['Sara Gómez', 'copy', 'c3'],
-    ['Juliana Mora', 'social', 's1'], ['Mateo Silva', 'social', 's2'], ['Daniela Vega', 'social', 's3'], ['Paula Ortiz', 'social', 's4'],
-    ['Santiago León', 'data', 'd1'], ['Carolina Díaz', 'data', 'd2'], ['Tomás Herrera', 'data', 'd3'],
+    ['Camilo Torres', 'diseno', 'c1'], ['Valentina Ríos', 'diseno', 'c2'], ['Sara Benítez', 'copy', 'c3'],
+    ['Isabel Mora', 'social', 's1'], ['Mateo Silva', 'social', 's2'], ['Daniela Vega', 'social', 's3'], ['Paula Ortiz', 'social', 's4'],
+    ['Martín León', 'data', 'd1'], ['Carolina Díaz', 'data', 'd2'], ['Tomás Herrera', 'data', 'd3'],
   ] as [string, Perfil, string][]
 ).map(([nombre, perfil, puesto], i) => ({ id: `p${i + 1}`, nombre, perfil, puesto }))
 
@@ -34,7 +35,7 @@ const activas: [string, number, string[]][] = [
 ]
 
 const formatos = ['Reel', 'Carrusel', 'Post', 'Story', 'TikTok', 'Live']
-const marcas = ['Dove', 'Rexona', 'Sedal', "Pond's", 'Fruco', 'Maizena', 'Savital', 'Ego']
+const categorias = ['cuidado del cabello', 'cuidado de la piel', 'desodorantes', 'snacks', 'bebidas', 'cocina fácil', 'hogar', 'bienestar']
 const temas = ['tendencia de la semana', 'Halloween', 'quincena', 'regreso a clases', 'Black Friday', 'Navidad', 'fútbol', 'recetas rápidas', 'rutina de noche', 'amor y amistad']
 
 let n = 0
@@ -45,7 +46,7 @@ const piezas: Pieza[] = activas.flatMap(([etapa, cant, quienes]) =>
     const dia = estado === 'vencida' ? 6 : estado === 'urgente' ? 10 : 14 + (n % 12)
     return {
       id: `t${n}`,
-      titulo: `${formatos[n % formatos.length]} · ${temas[(n * 7) % temas.length]} · ${marcas[(n * 3) % marcas.length]}`,
+      titulo: `${formatos[n % formatos.length]} · ${temas[(n * 7) % temas.length]} · ${categorias[(n * 3) % categorias.length]}`,
       etapa,
       asignados: n % 4 === 0 ? [quienes[i % quienes.length], quienes[(i + 1) % quienes.length]] : [quienes[i % quienes.length]],
       vence: `2026-10-${String(dia).padStart(2, '0')}`,

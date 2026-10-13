@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import express, { type ErrorRequestHandler } from 'express'
 import type { ConfigArea, Origen } from './taskboard.ts'
 import { crearVivo } from './vivo.ts'
@@ -10,8 +10,11 @@ if (!taskboard.url || !taskboard.token) {
   process.exit(1)
 }
 
-const leer = (archivo: string) => JSON.parse(readFileSync(new URL(`../areas/${archivo}`, import.meta.url), 'utf8')) as ConfigArea
-const vivo = crearVivo([leer('mesa-social-media.json')], taskboard)
+// Un archivo por área en server/areas. Un área sin personas todavía (la Mesa Demo antes de sus cuentas) no se sirve
+// y el web la muestra con datos de prueba.
+const AREAS = new URL('../areas/', import.meta.url)
+const areas = readdirSync(AREAS).filter(f => f.endsWith('.json')).map(f => JSON.parse(readFileSync(new URL(f, AREAS), 'utf8')) as ConfigArea)
+const vivo = crearVivo(areas.filter(a => a.personas.length), taskboard)
 
 const app = express()
 app.disable('x-powered-by')

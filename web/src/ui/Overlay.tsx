@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Activity, AlertTriangle, Check, ChevronDown, Hourglass, LayoutGrid, Layers, MapPin, Minus, Package, Plus, RotateCcw, Search, SquareKanban, Users, X } from 'lucide-react'
-import { PERFILES, estacionDe, personaDe, type Area, type Evento, type Perfil, type Pieza } from '../model'
+import { PERFILES, estacionDe, personaDe, type Area, type Disposicion, type Evento, type Perfil, type Pieza } from '../model'
+import { AREAS } from '../areas'
 import { moverCamara } from '../scene/Scene'
 import { enHorario, fechaHoy, horaTexto } from '../sim/horario'
 import type { Modo } from '../App'
 import type { Props } from '../scene/Puestos'
 
 const iniciales = (n: string) => n.split(' ').slice(0, 2).map(x => x[0]).join('')
+const sigla = (n: string) => n.split(' ').filter(w => /^[A-ZÁÉÍÓÚÑ]/.test(w)).map(w => w[0]).join('').slice(0, 2)
 const ESTADO = { vencida: ['Vencida', 'rojo'], urgente: ['Por vencer', 'ambar'], normal: ['A tiempo', 'verde'] } as const
 
-type OProps = Props & { onEtapa: (e: string | null) => void; modo: Modo; vivo: boolean }
+type OProps = Props & { onEtapa: (e: string | null) => void; modo: Modo; vivo: boolean; onArea: (d: Disposicion) => void }
 
 const deHoy = (ev: Evento) => !ev.fecha || ev.fecha === fechaHoy()
 // Hoy se ve la hora; días anteriores, la fecha (DD/MM).
@@ -40,9 +42,16 @@ export function Overlay(props: OProps) {
   )
 }
 
-function Barra({ area, onSelect, modo, vivo }: OProps) {
+function Barra({ area, onSelect, modo, vivo, onArea }: OProps) {
   const [reloj, setReloj] = useState(horaTexto)
   const [q, setQ] = useState('')
+  const [menu, setMenu] = useState(false)
+  useEffect(() => {
+    if (!menu) return
+    const cerrar = () => setMenu(false)
+    window.addEventListener('pointerdown', cerrar)
+    return () => window.removeEventListener('pointerdown', cerrar)
+  }, [menu])
   useEffect(() => { const t = setInterval(() => setReloj(horaTexto()), 20_000); return () => clearInterval(t) }, [])
   const buscar = (txt: string) => {
     setQ(txt)
@@ -60,14 +69,29 @@ function Barra({ area, onSelect, modo, vivo }: OProps) {
       <div className="brand"><img src="/ogilvy-logo.png" alt="Ogilvy" /><span>Live</span></div>
       <label className="buscar"><Search /><input value={q} onChange={e => buscar(e.target.value)} placeholder="Buscar personas, piezas o estaciones…" /></label>
       <div className="derecha">
-        <button className="selector" title="Por ahora hay una sola área">
-          <span className="sq">MS</span>
-          <span><b>{area.nombre}</b><small>{area.cliente} · {area.personas.length} personas</small></span>
-          <ChevronDown />
-        </button>
+        <div className="selector-caja" onPointerDown={e => e.stopPropagation()}>
+          <button className="selector" aria-haspopup="listbox" aria-expanded={menu} onClick={() => setMenu(!menu)}>
+            <span className="sq">{sigla(area.nombre)}</span>
+            <span><b>{area.nombre}</b><small>{area.cliente} · {area.personas.length} personas</small></span>
+            <ChevronDown />
+          </button>
+          {menu && (
+            <ul className="card menu-areas" role="listbox">
+              {AREAS.map(d => (
+                <li key={d.id} role="option" aria-selected={d.id === area.id}>
+                  <button onClick={() => { setMenu(false); if (d.id !== area.id) onArea(d) }}>
+                    <span className="sq">{sigla(d.nombre)}</span>
+                    <span><b>{d.nombre}</b><small>{d.cliente} · {d.fuente}</small></span>
+                    {d.id === area.id && <Check />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         {vivo ? <span className="tag verde"><i className="punto" />En vivo · {reloj}</span> : <span className="tag ambar"><i className="punto" />Reconectando…</span>}
         {!enHorario() && <span className="tag gris">Fuera de horario · puestos vacíos</span>}
-        {modo === 'prueba' ? <span className="tag ambar">Datos de prueba · simulación</span> : <span className="tag gris">TaskBoard · Social First</span>}
+        {modo === 'prueba' ? <span className="tag ambar">Datos de prueba · simulación</span> : <span className="tag gris">{area.fuente}</span>}
         <div className="user"><span className="avatar">IR</span><span><b>Imderf Ríos</b><small>Coordinación general</small></span></div>
       </div>
     </header>
@@ -224,7 +248,7 @@ function Recorrido({ area, sel, etapa, onEtapa }: OProps) {
       <div className="cab-linea">
         <span className="ico rojo"><Activity /></span>
         <b>{pieza ? 'Recorrido de la pieza' : 'Etapas del tablero'}</b>
-        <small>{pieza ? pieza.titulo : 'Social First · clic para filtrar'}</small>
+        <small>{pieza ? pieza.titulo : 'Clic en una etapa para filtrar'}</small>
       </div>
       <ol>
         {activas.map((et, i) => {

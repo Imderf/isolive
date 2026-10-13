@@ -1,12 +1,13 @@
-import type { Area } from '../model.ts'
+import type { Disposicion } from '../model.ts'
 
 // Disposición del área en la oficina genérica (V1): estaciones, a qué etapas responden y puestos.
 // Las piezas sin responsable de la mesa esperan en la bandeja (ancla) de su estación de trabajo.
 // Es lo que se reemplaza con el piso 4 real del Naos en V2 y lo que el panel de administración editará.
-export const disposicion: Pick<Area, 'id' | 'nombre' | 'cliente' | 'estaciones' | 'puestos' | 'visitas'> = {
+export const disposicion: Disposicion = {
   id: 'mesa-social-media',
   nombre: 'Mesa de Social Media',
   cliente: 'Unilever',
+  fuente: 'TaskBoard · Social First',
   estaciones: [
     { id: 'datos', nombre: 'Muro de datos', etapas: ['Señal detectada', 'Monitoreo', 'Seguimiento (Performance)'], tipo: 'trabajo', color: '#3B4252', zona: [-14, -9.4, -6, -2.6], ancla: [-8.75, -8.9], perfiles: ['data'] },
     { id: 'estrategia', nombre: 'Mesa de estrategia', etapas: ['Identificación/Viabilidad', 'Ideación'], tipo: 'trabajo', color: '#8E1F2A', zona: [-4, -9.4, 4, -2.6], ancla: [0, -8.9] },
