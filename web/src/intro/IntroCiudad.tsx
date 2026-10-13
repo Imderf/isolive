@@ -1,13 +1,14 @@
 import { createRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
-import { CanvasTexture, Color, ExtrudeGeometry, MathUtils, MeshStandardMaterial, Object3D, PlaneGeometry, SRGBColorSpace, Shape, Vector2, Vector3, type Group, type InstancedMesh } from 'three'
+import { CanvasTexture, Color, ExtrudeGeometry, MathUtils, MeshStandardMaterial, Object3D, PlaneGeometry, RepeatWrapping, SRGBColorSpace, Shape, Vector2, Vector3, type Group, type InstancedMesh } from 'three'
 import entorno from './entorno-naos.json'
 import { Cuerpo } from '../scene/Persona'
 import { Cabina } from './Ascensor'
 import { Arbol, TextoSuelo } from '../scene/parts'
 
 // Intro: el barrio real del Naos (OpenStreetMap, extraído una vez como hace map3d) con los cerros orientales al fondo.
+// El Naos sigue al edificio real; los vecinos son volúmenes de OSM con ventanas y locales de textura.
 // La cámara baja a la entrada sobre la Av. Carrera 9, sigue a una persona por el vestíbulo de vidrio hasta el ascensor,
 // las puertas se cierran y la escena pasa al interior de la cabina. En los datos, +x es el oriente y +z el sur.
 type P = [number, number]
@@ -66,32 +67,146 @@ function Camara({ onLlegar }: { onLlegar: () => void }) {
 const FACHADAS = ['#C4704E', '#B5603F', '#CF8A64', '#E5D4B6', '#F1E7D6', '#D7DCE4', '#AFC3D6']
 const tono = (id: string | number) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return FACHADAS[h % FACHADAS.length] }
 
-function Edificio({ puntos, alto, color, y = 0, escala = 1 }: { puntos: P[]; alto: number; color: string; y?: number; escala?: number }) {
-  const geo = useMemo(() => {
-    const s = new Shape(puntos.map(([x, z]) => new Vector2(x, -z)))
-    return new ExtrudeGeometry(s, { depth: alto, bevelEnabled: false })
-  }, [puntos, alto])
+const useExtrusion = (puntos: P[], alto: number) =>
+  useMemo(() => new ExtrudeGeometry(new Shape(puntos.map(([x, z]) => new Vector2(x, -z))), { depth: alto, bevelEnabled: false }), [puntos, alto])
+
+function Volumen({ puntos, alto, color, y = 0, escala = 1, rugosidad = 0.8, metal = 0, emisivo = '#000000', intensidad = 0 }: {
+  puntos: P[]; alto: number; color: string; y?: number; escala?: number; rugosidad?: number; metal?: number; emisivo?: string; intensidad?: number
+}) {
+  const geo = useExtrusion(puntos, alto)
   return (
     <mesh geometry={geo} rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]} scale={[escala, escala, 1]} castShadow receiveShadow>
-      <meshStandardMaterial color={color} roughness={0.8} />
+      <meshStandardMaterial color={color} roughness={rugosidad} metalness={metal} emissive={emisivo} emissiveIntensity={intensidad} />
     </mesh>
   )
 }
 
-// El Naos: vidrio con losas blancas por piso y el piso 4 (Ogilvy) en rojo.
+// Fachadas de los vecinos: ventanas por piso (celda de 3 × 3,3 m) y, en el primer piso, locales con vitrina y puerta
+// (celda de 9 m). El color de la pared va pintado en la textura para que el vidrio no se tiña; el ladrillo lleva hiladas.
+// En la extrusión, v = 1 − altura: sin voltear y con este corrimiento, cada celda arranca en el piso.
+const TECHO = new MeshStandardMaterial({ color: '#BCC1C8', roughness: 0.9 })
+const fachadas = new Map<string, { locales: MeshStandardMaterial; ventanas: MeshStandardMaterial }>()
+function fachada(color: string) {
+  const hecha = fachadas.get(color)
+  if (hecha) return hecha
+  const ladrillo = FACHADAS.indexOf(color) < 3
+  const vidrio = (x: CanvasRenderingContext2D, a: number, b: number, w: number, h: number) => {
+    x.fillStyle = '#F4F2ED'; x.fillRect(a - 4, b - 4, w + 8, h + 8)
+    const g = x.createLinearGradient(0, b, 0, b + h); g.addColorStop(0, '#9CB0C4'); g.addColorStop(1, '#4D5C6D')
+    x.fillStyle = g; x.fillRect(a, b, w, h)
+  }
+  const textura = (ancho: number, metros: number, pintar: (x: CanvasRenderingContext2D) => void) => {
+    const c = Object.assign(document.createElement('canvas'), { width: ancho, height: 140 })
+    const x = c.getContext('2d')!
+    x.fillStyle = color; x.fillRect(0, 0, ancho, 140)
+    if (ladrillo) { x.fillStyle = 'rgba(0, 0, 0, .08)'; for (let y = 3; y < 140; y += 6) x.fillRect(0, y, ancho, 1) }
+    pintar(x)
+    const t = new CanvasTexture(c)
+    t.wrapS = t.wrapT = RepeatWrapping; t.flipY = false; t.colorSpace = SRGBColorSpace; t.anisotropy = 8
+    t.repeat.set(1 / metros, 1 / PISO); t.offset.y = 1 - 1 / PISO
+    return new MeshStandardMaterial({ map: t, roughness: 0.85 })
+  }
+  const lista = {
+    ventanas: textura(128, 3, x => {
+      vidrio(x, 24, 30, 80, 72); x.fillStyle = '#F4F2ED'; x.fillRect(62, 30, 4, 72)
+      x.fillStyle = 'rgba(0, 0, 0, .1)'; x.fillRect(0, 0, 128, 8)
+    }),
+    locales: textura(384, 9, x => {
+      x.fillStyle = 'rgba(0, 0, 0, .14)'; x.fillRect(0, 0, 384, 16)
+      vidrio(x, 18, 34, 136, 106); vidrio(x, 230, 34, 136, 106)
+      x.fillStyle = '#3A3F4A'; x.fillRect(170, 44, 46, 96)
+      x.fillStyle = '#C9CED6'; x.fillRect(208, 90, 3, 14)
+    }),
+  }
+  fachadas.set(color, lista)
+  return lista
+}
+
+function Vecino({ b }: { b: { id: number; pisos: number; puntos: number[][] } }) {
+  const puntos = b.puntos as P[]
+  const { locales, ventanas } = fachada(tono(b.id))
+  const bajo = useExtrusion(puntos, PISO), arriba = useExtrusion(puntos, Math.max(b.pisos - 1, 0) * PISO)
+  return (
+    <group rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh geometry={bajo} material={[TECHO, locales]} castShadow receiveShadow />
+      {b.pisos > 1 && <mesh geometry={arriba} material={[TECHO, ventanas]} position={[0, 0, PISO]} castShadow receiveShadow />}
+    </group>
+  )
+}
+
+// El Naos (NAOS Business Campus, Arquitectura en Estudio, 2017): vidrio oscuro detrás de una celosía de aletas de
+// aluminio, losas de concreto visto en cada piso, esquinas curvas con árboles en terrazas de doble altura y cubierta
+// verde. El piso 4 (Ogilvy) se ve iluminado y con una línea roja. El origen de los datos es el centro del Naos.
+const CONCRETO = '#D3D5D6'
 function Naos({ puntos, pisos }: { puntos: P[]; pisos: number }) {
+  const alto = pisos * PISO
   return (
     <group>
       {/* el vidrio va un poco adentro de las losas para que no parpadeen al coincidir */}
-      <Edificio puntos={puntos} alto={pisos * PISO} color="#9DBEDC" escala={0.985} />
-      {Array.from({ length: pisos }, (_, i) => (
-        <Edificio key={i} puntos={puntos} alto={i === 3 ? 0.6 : 0.22} y={i * PISO + (i === 3 ? 0 : PISO - 0.11)} color={i === 3 ? '#EF3B3A' : '#FFFFFF'} />
+      <Volumen puntos={puntos} alto={alto} color="#5D6B7B" escala={0.985} rugosidad={0.25} metal={0.15} />
+      <Volumen puntos={puntos} alto={PISO - 0.45} y={3 * PISO + 0.45} color="#F2D3A2" escala={0.987} rugosidad={0.4} emisivo="#FFC46E" intensidad={0.45} />
+      {Array.from({ length: pisos + 1 }, (_, i) => (
+        <Volumen key={i} puntos={puntos} alto={i === 3 ? 0.22 : 0.45} y={i * PISO} color={i === 3 ? '#EF3B3A' : CONCRETO} />
       ))}
+      <Volumen puntos={puntos} alto={0.12} y={alto + 0.45} color="#86A877" escala={0.94} />
+      <mesh position={[0, alto + 2.15, 0]} rotation={[0, Math.atan2(-lado.z, lado.x), 0]} castShadow>
+        <boxGeometry args={[16, 3.4, 9]} /><meshStandardMaterial color="#C7CACC" roughness={0.8} />
+      </mesh>
+      <Celosia puntos={puntos} y0={PISO} y1={alto} />
+      <Terrazas puntos={puntos} pisos={pisos} />
       <Vestibulo />
-      <Html portal={capa} position={[0, pisos * PISO + 9, 0]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
+      <Html portal={capa} position={[0, alto + 9, 0]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
         <div className="pill pill-oscuro intro-pill">Edificio Naos<small>Av. Carrera 9 #101-67 · Ogilvy, piso 4</small></div>
       </Html>
     </group>
+  )
+}
+
+// Celosía: aletas verticales de aluminio frente al vidrio, más densas en las fachadas oriente y occidente (más sol).
+function Celosia({ puntos, y0, y1 }: { puntos: P[]; y0: number; y1: number }) {
+  const ref = useRef<InstancedMesh>(null)
+  const aletas = useMemo(() => {
+    const out: [number, number, number][] = []
+    puntos.forEach(([ax, az], i) => {
+      const [bx, bz] = puntos[(i + 1) % puntos.length]
+      const largo = Math.hypot(bx - ax, bz - az)
+      if (largo < 0.5) return
+      let nx = (bz - az) / largo, nz = -(bx - ax) / largo
+      if (nx * (ax + bx) + nz * (az + bz) < 0) { nx = -nx; nz = -nz } // hacia afuera (el origen está adentro)
+      const paso = Math.abs(nx) > Math.abs(nz) ? 0.6 : 1.0
+      for (let d = paso / 2; d < largo; d += paso) out.push([ax + ((bx - ax) * d) / largo + nx * 0.4, az + ((bz - az) * d) / largo + nz * 0.4, Math.atan2(nx, nz)])
+    })
+    return out
+  }, [puntos])
+  useLayoutEffect(() => {
+    const o = new Object3D()
+    aletas.forEach(([x, z, r], i) => { o.position.set(x, (y0 + y1) / 2, z); o.rotation.set(0, r, 0); o.updateMatrix(); ref.current!.setMatrixAt(i, o.matrix) })
+    ref.current!.instanceMatrix.needsUpdate = true
+  }, [aletas, y0, y1])
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, aletas.length]} castShadow>
+      <boxGeometry args={[0.07, y1 - y0, 0.3]} /><meshStandardMaterial color="#A9B0B8" roughness={0.45} metalness={0.5} />
+    </instancedMesh>
+  )
+}
+
+// Terrazas de doble altura en las esquinas curvas, con cauchos sabaneros.
+function Terrazas({ puntos, pisos }: { puntos: P[]; pisos: number }) {
+  const esquinas = [puntos.reduce((a, b) => (b[0] < a[0] ? b : a)), puntos.reduce((a, b) => (b[0] > a[0] ? b : a))]
+  return (
+    <>
+      {esquinas.flatMap(([x, z], k) => [1, 3, 5].filter(i => i < pisos - 1).map(i => {
+        const f = (Math.hypot(x, z) + 1.1) / Math.hypot(x, z)
+        return (
+          <group key={`${k}-${i}`} position={[x * f, i * PISO + 0.35, z * f]}>
+            <mesh position={[0, -0.1, 0]} receiveShadow><boxGeometry args={[2.6, 0.2, 2.6]} /><meshStandardMaterial color={CONCRETO} /></mesh>
+            <mesh position={[0, 0.3, 0]}><boxGeometry args={[1.2, 0.6, 1.2]} /><meshStandardMaterial color="#B9BDC1" /></mesh>
+            <mesh position={[0, 1.4, 0]}><cylinderGeometry args={[0.08, 0.1, 1.6, 6]} /><meshStandardMaterial color="#7A5C40" /></mesh>
+            <mesh position={[0, 2.7, 0]} castShadow><icosahedronGeometry args={[1.3, 1]} /><meshStandardMaterial color="#4F7F4B" flatShading roughness={0.9} /></mesh>
+          </group>
+        )
+      }))}
+    </>
   )
 }
 
@@ -234,7 +349,7 @@ export function IntroCiudad({ onLlegar, onSaltar }: { onLlegar: () => void; onSa
         <fog attach="fog" args={[CIELO, 500, 2600]} />
         <hemisphereLight args={['#EAF3FF', '#C9D6C3', 1.5]} />
         <directionalLight castShadow position={[180, 260, 120]} intensity={2} color="#FFF1DC" shadow-mapSize={[2048, 2048]}
-          shadow-camera-left={-220} shadow-camera-right={220} shadow-camera-top={220} shadow-camera-bottom={-220} shadow-bias={-0.0005} />
+          shadow-camera-left={-220} shadow-camera-right={220} shadow-camera-top={220} shadow-camera-bottom={-220} shadow-bias={-0.0005} shadow-normalBias={0.05} />
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <planeGeometry args={[3000, 3000]} />
           <meshStandardMaterial color="#E1E8D9" roughness={1} />
@@ -242,9 +357,7 @@ export function IntroCiudad({ onLlegar, onSaltar }: { onLlegar: () => void; onSa
         <Cerros />
         <Calles />
         <Arboles />
-        {entorno.edificios.filter(b => b.id !== entorno.naos).map(b => (
-          <Edificio key={b.id} puntos={b.puntos as P[]} alto={b.pisos * PISO} color={tono(b.id)} />
-        ))}
+        {entorno.edificios.filter(b => b.id !== entorno.naos).map(b => <Vecino key={b.id} b={b} />)}
         <Naos puntos={naos.puntos as P[]} pisos={naos.pisos} />
         <Caminante />
         <Camara onLlegar={onLlegar} />
@@ -303,6 +416,8 @@ function Vestibulo() {
     oscuro: new MeshStandardMaterial({ color: '#3A3F4A', roughness: 0.6 }),
     luz: new MeshStandardMaterial({ color: '#FFF6E6', emissive: '#FFE9C4', emissiveIntensity: 1.4 }),
     rojo: new MeshStandardMaterial({ color: '#EF3B3A', roughness: 0.6 }),
+    marquesina: new MeshStandardMaterial({ color: '#4A515C', roughness: 0.7 }),
+    madera: new MeshStandardMaterial({ color: '#B08A63', roughness: 0.8 }),
   }), [])
   const vidrioIzq = useRef<Group>(null), vidrioDer = useRef<Group>(null), hojaIzq = useRef<Group>(null), hojaDer = useRef<Group>(null)
   const [indicador, setIndicador] = useState('1')
@@ -324,7 +439,7 @@ function Vestibulo() {
       {caja([0, 0.09, 4.3], [2.2, 0.02, 1.2], m.oscuro)}
       {caja([0, 3.45, 3.0], [6.6, 0.16, 4.0], m.marco, true)}
       {caja([0, 3.36, 3.1], [4.6, 0.02, 2.0], m.luz)}
-      <pointLight position={[0, 2.9, 3.1]} color="#FFE7C2" intensity={18} distance={10} decay={2} />
+      <pointLight position={[0, 2.6, 3.4]} color="#FFE7C2" intensity={9} distance={6} decay={2} />
       {/* muro del fondo con el vano del ascensor */}
       {caja([-2.05, 1.7, 1.2], [2.3, 3.4, 0.2], m.muro)}
       {caja([2.05, 1.7, 1.2], [2.3, 3.4, 0.2], m.muro)}
@@ -351,9 +466,11 @@ function Vestibulo() {
       <group ref={vidrioIzq} position={[-0.6, 0, 0]}>{caja([0, 1.48, 5.07], [1.15, 2.95, 0.04], m.vidrio)}{caja([0.48, 1.2, 5.12], [0.04, 0.9, 0.04], m.acero)}</group>
       <group ref={vidrioDer} position={[0.6, 0, 0]}>{caja([0, 1.48, 5.07], [1.15, 2.95, 0.04], m.vidrio)}{caja([-0.48, 1.2, 5.12], [0.04, 0.9, 0.04], m.acero)}</group>
       {[-3.2, 3.2].map(x => <group key={x}>{caja([x, 1.5, 3.1], [0.04, 3.0, 3.8], m.vidrio)}</group>)}
-      {/* marquesina roja con el nombre del edificio */}
-      {caja([0, 3.62, 5.9], [7.2, 0.24, 2.2], m.rojo, true)}
-      <Letrero texto="NAOS" ancho={2.4} alto={0.2} fondo="#EF3B3A" color="#FFFFFF" p={[0, 3.62, 7.011]} />
+      {/* marquesina con el nombre del edificio; en el lobby, árbol y banca como en el real */}
+      {caja([0, 3.62, 5.9], [7.2, 0.24, 2.2], m.marquesina, true)}
+      <Letrero texto="NAOS" ancho={2.4} alto={0.2} fondo="#4A515C" color="#FFFFFF" p={[0, 3.62, 7.011]} />
+      <Arbol p={[-2.3, 0.08, 3.4]} s={1.5} />
+      {caja([2.0, 0.27, 3.6], [1.6, 0.42, 0.5], m.madera)}
       <Arbol p={[-4.3, 0.06, 6.2]} s={1.6} />
       <Arbol p={[4.3, 0.06, 6.2]} s={1.6} />
     </group>
