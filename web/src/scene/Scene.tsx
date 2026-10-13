@@ -10,6 +10,7 @@ import { Persona } from './Persona'
 import { Visitantes } from './Visitantes'
 import { Trafico } from './Trafico'
 import { construirMapa } from '../sim/rutas'
+import type { XZ } from '../model'
 
 // Encuadre inicial: el objetivo va corrido a la derecha para que el piso quede en el área libre de paneles.
 const OBJETIVO = new Vector3(3.6, 0, -2.2)
@@ -17,34 +18,46 @@ const CAMARA = OBJETIVO.clone().add(new Vector3(37, 35, 37))
 
 export type AccionCamara = 'acercar' | 'alejar' | 'inicio' | 'salir'
 export const moverCamara = (a: AccionCamara) => window.dispatchEvent(new CustomEvent('camara', { detail: a }))
+// Vuela hasta un punto del piso (resultado del buscador) y acerca un poco la vista.
+export const enfocarCamara = (p: XZ) => window.dispatchEvent(new CustomEvent('camara', { detail: { enfocar: p } }))
 
 // Al salir del ascensor la cámara arranca a la altura de los ojos en el borde sur del piso, mirando la oficina,
 // y sube hasta la vista de siempre. Mientras tanto los controles quedan quietos.
-const SALIDA = new Vector3(3, 1.7, 12.5), SALIDA_MIRA = new Vector3(1, 1.2, -2), VUELO = 2.8 // s
+const SALIDA = new Vector3(3, 1.7, 12.5), SALIDA_MIRA = new Vector3(1, 1.2, -2)
+interface Vuelo { t0: number; dur: number; p0: Vector3; p1: Vector3; m0: Vector3; m1: Vector3 }
 
 function ControlCamara({ entrada }: { entrada: boolean }) {
   const camera = useThree(s => s.camera)
   const controls = useThree(s => s.controls) as unknown as MapControlsImpl | null
   const pendiente = useRef(entrada)
-  const vuelo = useRef<number | null>(null) // cuándo empezó la salida
+  const vuelo = useRef<Vuelo | null>(null)
   useEffect(() => {
     if (!controls || !pendiente.current) return
     camera.position.copy(SALIDA); controls.target.copy(SALIDA_MIRA); controls.enabled = false; controls.update()
   }, [camera, controls])
   useFrame(() => {
-    if (vuelo.current === null || !controls) return
-    const u = Math.min((performance.now() - vuelo.current) / 1000 / VUELO, 1)
+    const v = vuelo.current
+    if (!v || !controls) return
+    const u = Math.min((performance.now() - v.t0) / 1000 / v.dur, 1)
     const e = u < 0.5 ? 4 * u ** 3 : 1 - (-2 * u + 2) ** 3 / 2
-    camera.position.lerpVectors(SALIDA, CAMARA, e)
-    controls.target.lerpVectors(SALIDA_MIRA, OBJETIVO, e)
+    camera.position.lerpVectors(v.p0, v.p1, e)
+    controls.target.lerpVectors(v.m0, v.m1, e)
     controls.update()
     if (u === 1) { vuelo.current = null; controls.enabled = true }
   })
   useEffect(() => {
+    const volar = (dur: number, p1: Vector3, m1: Vector3) => {
+      vuelo.current = { t0: performance.now(), dur, p0: camera.position.clone(), p1, m0: controls!.target.clone(), m1 }
+      controls!.enabled = false
+    }
     const on = (ev: Event) => {
       if (!controls) return
-      const a = (ev as CustomEvent<AccionCamara>).detail
-      if (a === 'salir') { if (pendiente.current) { pendiente.current = false; vuelo.current = performance.now() } return }
+      const a = (ev as CustomEvent<AccionCamara | { enfocar: XZ }>).detail
+      if (a === 'salir') { if (pendiente.current) { pendiente.current = false; volar(2.8, CAMARA.clone(), OBJETIVO.clone()) } return }
+      if (typeof a === 'object') {
+        const m1 = new Vector3(a.enfocar[0], 0, a.enfocar[1])
+        return volar(1.1, m1.clone().add(CAMARA.clone().sub(OBJETIVO).multiplyScalar(0.5)), m1)
+      }
       vuelo.current = null; controls.enabled = true
       if (a === 'inicio') { controls.target.copy(OBJETIVO); camera.position.copy(CAMARA) }
       else {

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Activity, AlertTriangle, Check, ChevronDown, Hourglass, LayoutGrid, Layers, MapPin, Maximize, Minimize, Minus, Package, Plus, RotateCcw, Search, SquareKanban, Users, X } from 'lucide-react'
-import { PERFILES, estacionDe, personaDe, type Area, type Disposicion, type Evento, type Perfil, type Pieza } from '../model'
+import { PERFILES, estacionDe, personaDe, type Area, type Disposicion, type Evento, type Perfil, type Pieza, type Seleccion, type XZ } from '../model'
 import { AREAS } from '../areas'
-import { moverCamara } from '../scene/Scene'
+import { enfocarCamara, moverCamara } from '../scene/Scene'
 import { enHorario, fechaHoy, horaTexto } from '../sim/horario'
 import type { Modo } from '../App'
 import type { Props } from '../scene/Puestos'
@@ -12,6 +12,31 @@ const sigla = (n: string) => n.split(' ').filter(w => /^[A-ZÁÉÍÓÚÑ]/.test(
 const ESTADO = { vencida: ['Vencida', 'rojo'], urgente: ['Por vencer', 'ambar'], normal: ['A tiempo', 'verde'] } as const
 
 type OProps = Props & { onEtapa: (e: string | null) => void; modo: Modo; vivo: boolean; onArea: (d: Disposicion) => void }
+
+// Buscador: personas, piezas y estaciones (también por etapa), sin importar tildes ni mayúsculas.
+const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+type Resultado = { sel: Seleccion; titulo: string; detalle: string; punto: XZ }
+function buscarEn(a: Area, q: string): Resultado[] {
+  const t = norm(q.trim())
+  if (t.length < 2) return []
+  const puesto = (id?: string) => a.puestos.find(pu => pu.id === personaDe(a, id)?.puesto)?.pos
+  const personas = a.personas.filter(p => norm(p.nombre).includes(t)).slice(0, 5).map(p => ({
+    sel: { tipo: 'persona' as const, id: p.id }, titulo: p.nombre, punto: puesto(p.id)!,
+    detalle: `${PERFILES[p.perfil].nombre} · ${a.piezas.filter(x => x.tiene?.persona === p.id).length} piezas`,
+  }))
+  const piezas = a.piezas.filter(p => norm(p.titulo).includes(t)).slice(0, 5).map(p => {
+    const est = estacionDe(a, p.etapa), quien = personaDe(a, p.tiene?.persona)
+    return {
+      sel: { tipo: 'pieza' as const, id: p.id }, titulo: p.titulo, detalle: `${p.etapa}${quien ? ` · ${quien.nombre}` : ''}`,
+      punto: est.tipo === 'lugar' ? est.ancla : puesto(p.tiene?.persona) ?? est.ancla,
+    }
+  })
+  const estaciones = a.estaciones.filter(e => norm(e.nombre).includes(t) || e.etapas.some(x => norm(x).includes(t))).slice(0, 3).map(e => ({
+    sel: { tipo: 'estacion' as const, id: e.id }, titulo: e.nombre, detalle: e.etapas.join(' · '), punto: e.ancla,
+  }))
+  return [...personas, ...piezas, ...estaciones]
+}
+const ICONO = { persona: <Users />, pieza: <Package />, estacion: <MapPin />, tablero: <SquareKanban /> }
 
 const deHoy = (ev: Evento) => !ev.fecha || ev.fecha === fechaHoy()
 // Hoy se ve la hora; días anteriores, la fecha (DD/MM).
@@ -58,21 +83,39 @@ function Barra({ area, onSelect, modo, vivo, onArea }: OProps) {
     return () => window.removeEventListener('pointerdown', cerrar)
   }, [menu])
   useEffect(() => { const t = setInterval(() => setReloj(horaTexto()), 20_000); return () => clearInterval(t) }, [])
-  const buscar = (txt: string) => {
-    setQ(txt)
-    const t = txt.trim().toLowerCase()
-    if (t.length < 3) return
-    const p = area.personas.find(x => x.nombre.toLowerCase().includes(t))
-    if (p) return onSelect({ tipo: 'persona', id: p.id })
-    const pz = area.piezas.find(x => x.titulo.toLowerCase().includes(t))
-    if (pz) return onSelect({ tipo: 'pieza', id: pz.id })
-    const e = area.estaciones.find(x => x.nombre.toLowerCase().includes(t))
-    if (e) onSelect({ tipo: 'estacion', id: e.id })
+  const [abierto, setAbierto] = useState(false)
+  const [activo, setActivo] = useState(0)
+  const resultados = useMemo(() => buscarEn(area, q), [area, q])
+  const elegir = (r: Resultado) => { onSelect(r.sel); enfocarCamara(r.punto); setQ(''); setAbierto(false) }
+  const tecla = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActivo(i => Math.min(i + 1, resultados.length - 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActivo(i => Math.max(i - 1, 0)) }
+    else if (e.key === 'Enter' && resultados[activo]) elegir(resultados[activo])
+    else if (e.key === 'Escape') { setQ(''); setAbierto(false) }
   }
   return (
     <header className="top">
       <div className="brand"><img src="/ogilvy-logo.png" alt="Ogilvy" /><span>Live</span></div>
-      <label className="buscar"><Search /><input value={q} onChange={e => buscar(e.target.value)} placeholder="Buscar personas, piezas o estaciones…" /></label>
+      <div className="buscador">
+        <label className="buscar">
+          <Search />
+          <input value={q} placeholder="Buscar personas, piezas o estaciones…" role="combobox" aria-expanded={abierto && q.trim().length >= 2}
+            onChange={e => { setQ(e.target.value); setActivo(0); setAbierto(true) }} onFocus={() => setAbierto(true)}
+            onBlur={() => setAbierto(false)} onKeyDown={tecla} />
+        </label>
+        {abierto && q.trim().length >= 2 && (
+          <ul className="card resultados" role="listbox">
+            {resultados.length ? resultados.map((r, i) => (
+              <li key={`${r.sel.tipo}-${r.sel.id}`} role="option" aria-selected={i === activo}>
+                <button className={i === activo ? 'activo' : ''} onMouseDown={e => e.preventDefault()} onMouseEnter={() => setActivo(i)} onClick={() => elegir(r)}>
+                  <span className="ico rojo">{ICONO[r.sel.tipo]}</span>
+                  <span><b>{r.titulo}</b><small>{r.detalle}</small></span>
+                </button>
+              </li>
+            )) : <li className="vacio">Sin resultados para «{q.trim()}»</li>}
+          </ul>
+        )}
+      </div>
       <div className="derecha">
         <div className="selector-caja" onPointerDown={e => e.stopPropagation()}>
           <button className="selector" aria-haspopup="listbox" aria-expanded={menu} onClick={() => setMenu(!menu)}>
