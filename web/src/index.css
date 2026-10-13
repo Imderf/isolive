@@ -22,6 +22,11 @@ svg { width: 16px; height: 16px; stroke-width: 2; }
 .etiquetas { position: fixed; inset: 0; pointer-events: none; z-index: 1; transition: opacity .7s ease .2s; }
 .etiquetas.ocultas { opacity: 0; }
 /* Entrada de la interfaz al salir del ascensor (solo la primera vez) */
+/* Pantalla completa: se esconden la barra, los indicadores y las etapas (los controles y la derecha no se mueven) */
+.top, .kpis, .recorrido { transition: transform .45s var(--ease), opacity .3s ease; }
+.ui.foco .top { transform: translateY(-120%); opacity: 0; pointer-events: none; }
+.ui.foco .kpis { transform: translateY(-140px); opacity: 0; pointer-events: none; }
+.ui.foco .recorrido { transform: translateY(130%); opacity: 0; pointer-events: none; }
 .ui.entrando > * { animation: entra .7s var(--ease) both; }
 .ui.entrando > .top { animation-name: entra-arriba; }
 .ui.entrando > .kpis { animation-delay: .1s; }
