@@ -21,19 +21,8 @@ export function Overlay(props: OProps) {
   const { area } = props
   const [entrando, setEntrando] = useState(true) // entrada escalonada solo la primera vez
   useEffect(() => { const t = setTimeout(() => setEntrando(false), 1600); return () => clearTimeout(t) }, [])
-  // Pantalla completa: esconde la barra, los indicadores y las etapas; quedan la oficina y los paneles de la derecha.
-  // Si el navegador no deja entrar a pantalla completa, igual se esconden. Esc (al salir de pantalla completa) los devuelve.
+  // Ver solo la oficina: esconde la barra, los indicadores y las etapas; quedan la oficina y los paneles de la derecha.
   const [foco, setFoco] = useState(false)
-  useEffect(() => {
-    const cambio = () => setFoco(!!document.fullscreenElement)
-    document.addEventListener('fullscreenchange', cambio)
-    return () => document.removeEventListener('fullscreenchange', cambio)
-  }, [])
-  const alternarFoco = () => {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-    else document.documentElement.requestFullscreen?.().catch(() => {})
-    setFoco(f => !f)
-  }
   const vencidas = area.piezas.filter(p => p.estado === 'vencida').length
   return (
     <div className={`ui${entrando ? ' entrando' : ''}${foco ? ' foco' : ''}`}>
@@ -48,7 +37,7 @@ export function Overlay(props: OProps) {
         <button title="Acercar" onClick={() => moverCamara('acercar')}><Plus /></button>
         <button title="Alejar" onClick={() => moverCamara('alejar')}><Minus /></button>
         <button title="Vista inicial" onClick={() => moverCamara('inicio')}><RotateCcw /></button>
-        <button title={foco ? 'Salir de pantalla completa' : 'Pantalla completa'} onClick={alternarFoco}>{foco ? <Minimize /> : <Maximize />}</button>
+        <button title={foco ? 'Mostrar todo' : 'Ver solo la oficina'} onClick={() => setFoco(f => !f)}>{foco ? <Minimize /> : <Maximize />}</button>
       </div>
       <Ficha {...props} />
       <Recorrido {...props} />
