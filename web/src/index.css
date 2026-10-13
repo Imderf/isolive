@@ -27,6 +27,8 @@ svg { width: 16px; height: 16px; stroke-width: 2; }
 .ui.foco .top { transform: translateY(-120%); opacity: 0; pointer-events: none; }
 .ui.foco .kpis { transform: translateY(-140px); opacity: 0; pointer-events: none; }
 .ui.foco .recorrido { transform: translateY(130%); opacity: 0; pointer-events: none; }
+.ficha { transition: top .45s var(--ease), max-height .45s var(--ease); }
+.ui.foco .ficha { top: 12px; max-height: calc(100vh - 12px - 310px); } /* mismo aire arriba que abajo */
 .ui.entrando > * { animation: entra .7s var(--ease) both; }
 .ui.entrando > .top { animation-name: entra-arriba; }
 .ui.entrando > .kpis { animation-delay: .1s; }
@@ -94,7 +96,7 @@ small { color: var(--muted); }
 .mapa-ctrl button:hover { background: #F4F5F8; color: var(--ink); }
 
 /* Ficha */
-.ficha { top: 86px; right: 12px; width: var(--panel); max-height: calc(100vh - 86px - 300px); overflow: auto; padding: 16px; }
+.ficha { top: 86px; right: 12px; width: var(--panel); max-height: calc(100vh - 86px - 310px); overflow: auto; padding: 16px; }
 .cab { display: flex; gap: 12px; align-items: flex-start; }
 .cab > div { flex: 1; min-width: 0; }
 .cab small { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
