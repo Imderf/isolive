@@ -9,7 +9,7 @@ import { enHorario } from '../sim/horario'
 import { cambiar, useVisual, visual, type Paso, type Pose } from '../sim/visual'
 import { Box, RED, capaEtiquetas } from './parts'
 
-const SLATE = '#2A303C', ZAPATO = '#1F2430'
+const SLATE = '#2A303C', CARA = '#1F2430'
 const PIEL = ['#E9C4A6', '#C9946B', '#8D5A3B']
 const PELO = ['#1A1A1A', '#4D4D4D', '#6B4A32']
 const VELOCIDAD = 1.5 // m/s
@@ -179,15 +179,15 @@ export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa, plan
         </mesh>
       )}
       {(hover || selected) ? (
-        <Html portal={capaEtiquetas} position={[0, 1.9, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
+        <Html portal={capaEtiquetas} position={[0, 1.75, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
           <div className="pill pill-oscuro">{etiqueta?.[0] ?? persona.nombre}<small>{etiqueta?.[1] ?? PERFILES[persona.perfil].nombre}</small></div>
         </Html>
       ) : enEtapa > 0 ? (
-        <Html portal={capaEtiquetas} position={[0, 1.9, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>
+        <Html portal={capaEtiquetas} position={[0, 1.75, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>
           <div className="conteo">{enEtapa}</div>
         </Html>
       ) : dice && (
-        <Html portal={capaEtiquetas} position={[0, 1.9, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>
+        <Html portal={capaEtiquetas} position={[0, 1.75, 0]} center zIndexRange={[15, 0]} style={{ pointerEvents: 'none' }}>
           <div className="pill pill-claro burbuja"><MessageCircle />{dice}</div>
         </Html>
       )}
@@ -203,33 +203,32 @@ export function Cuerpo({ camisa, piel, pelo, hip, rod, hom, pose }: {
   hip?: Pivote[]; rod?: Pivote[]; hom?: Pivote[]
   pose?: { cadera: number; rodilla: number; hombro: number }
 }) {
+  // Figura tipo Roblox: bloques con las proporciones del avatar clásico (cabeza ancha con cara, torso cuadrado,
+  // brazos y piernas del mismo grosor). Mira hacia -z.
   return (
     <>
-      <mesh position={[0, 0.92, 0]} castShadow>
-        <capsuleGeometry args={[0.19, 0.3, 4, 12]} />
-        <meshStandardMaterial color={camisa} roughness={0.8} />
-      </mesh>
-      <mesh position={[0, 1.36, 0]} castShadow>
-        <sphereGeometry args={[0.16, 16, 12]} />
-        <meshStandardMaterial color={piel} roughness={0.7} />
-      </mesh>
-      <mesh position={[0, 1.42, 0.03]} castShadow>
-        <sphereGeometry args={[0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color={pelo} roughness={0.9} />
-      </mesh>
+      <Box p={[0, 0.8, 0]} s={[0.48, 0.5, 0.26]} c={camisa} r={0.04} />
+      <group position={[0, 1.23, 0]}>
+        <Box p={[0, 0, 0]} s={[0.34, 0.32, 0.32]} c={piel} r={0.08} />
+        <Box p={[0, 0.12, 0.02]} s={[0.36, 0.12, 0.35]} c={pelo} r={0.05} />
+        <Box p={[0, 0.02, 0.1]} s={[0.36, 0.22, 0.16]} c={pelo} r={0.05} />
+        {[-1, 1].map(l => (
+          <mesh key={l} position={[l * 0.06, 0.02, -0.161]}><boxGeometry args={[0.035, 0.06, 0.01]} /><meshBasicMaterial color={CARA} /></mesh>
+        ))}
+        <mesh position={[0, -0.03, -0.161]} rotation={[0, 0, Math.PI]}><torusGeometry args={[0.05, 0.011, 6, 16, Math.PI]} /><meshBasicMaterial color={CARA} /></mesh>
+      </group>
       {[-1, 1].map((lado, k) => (
-        <group key={`p${k}`} ref={hip?.[k]} position={[lado * 0.09, 0.55, 0]} rotation={[pose?.cadera ?? 0, 0, 0]}>
-          <Box p={[0, -0.14, 0]} s={[0.13, 0.3, 0.14]} c={SLATE} />
+        <group key={`p${k}`} ref={hip?.[k]} position={[lado * 0.12, 0.55, 0]} rotation={[pose?.cadera ?? 0, 0, 0]}>
+          <Box p={[0, -0.14, 0]} s={[0.235, 0.3, 0.25]} c={SLATE} r={0.03} />
           <group ref={rod?.[k]} position={[0, -0.28, 0]} rotation={[pose?.rodilla ?? 0, 0, 0]}>
-            <Box p={[0, -0.13, 0]} s={[0.12, 0.27, 0.13]} c={SLATE} />
-            <Box p={[0, -0.25, -0.04]} s={[0.12, 0.05, 0.2]} c={ZAPATO} />
+            <Box p={[0, -0.135, 0]} s={[0.235, 0.29, 0.25]} c={SLATE} r={0.03} />
           </group>
         </group>
       ))}
       {[-1, 1].map((lado, k) => (
-        <group key={`b${k}`} ref={hom?.[k]} position={[lado * 0.25, 1.1, 0]} rotation={[pose?.hombro ?? 0, 0, 0]}>
-          <Box p={[0, -0.19, 0]} s={[0.1, 0.4, 0.1]} c={camisa} />
-          <mesh position={[0, -0.42, 0]}><sphereGeometry args={[0.055, 10, 8]} /><meshStandardMaterial color={piel} /></mesh>
+        <group key={`b${k}`} ref={hom?.[k]} position={[lado * 0.355, 1, 0]} rotation={[pose?.hombro ?? 0, 0, 0]}>
+          <Box p={[0, -0.1, 0]} s={[0.22, 0.25, 0.24]} c={camisa} r={0.03} />
+          <Box p={[0, -0.33, 0]} s={[0.21, 0.22, 0.23]} c={piel} r={0.03} />
         </group>
       ))}
     </>
