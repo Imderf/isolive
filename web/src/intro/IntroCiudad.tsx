@@ -241,7 +241,7 @@ function Calles() {
   )
 }
 
-// Árboles a lado y lado de las vías, sin caer dentro de un edificio ni frente a la entrada.
+// Árboles a lado y lado de las avenidas principales (cada 32 m), sin caer dentro de un edificio ni frente a la entrada.
 const dentro = ([x, z]: P, pol: P[]) => {
   let si = false
   for (let i = 0, j = pol.length - 1; i < pol.length; j = i++) {
@@ -255,11 +255,11 @@ function Arboles() {
   const puntos = useMemo(() => {
     const out: [number, number, number][] = []
     for (const c of entorno.calles) {
-      if (c.tipo === 'tren' || c.ancho < 7) continue
+      if (c.tipo !== 'primary' && c.tipo !== 'secondary') continue
       for (let i = 1; i < c.puntos.length; i++) {
         const [ax, az] = c.puntos[i - 1], [bx, bz] = c.puntos[i]
         const largo = Math.hypot(bx - ax, bz - az), nx = -(bz - az) / largo, nz = (bx - ax) / largo
-        for (let s = 10; s < largo; s += 24) for (const l of [-1, 1]) {
+        for (let s = 12; s < largo; s += 32) for (const l of [-1, 1]) {
           const p: P = [ax + ((bx - ax) * s) / largo + nx * l * (c.ancho / 2 + 2), az + ((bz - az) * s) / largo + nz * l * (c.ancho / 2 + 2)]
           if (Math.hypot(p[0] - puerta[0], p[1] - puerta[1]) < 16) continue
           if (entorno.edificios.some(b => dentro(p, b.puntos as P[]))) continue
