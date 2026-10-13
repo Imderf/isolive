@@ -1,0 +1,4 @@
+HipToBeSquare.fbx y TXT_HipToBeSquare_ALB.png: archivos de referencia de avatar de Roblox
+(github.com/Roblox/creator-docs, content/en-us/assets/art/reference-files/HipToBeSquare-HigherFidelity.zip), bajados el 2026-10-13.
+Solo para la demo local de Ogilvy Live: el repositorio declara CC-BY-4.0 para la prosa y MIT para el código, pero no dice
+qué licencia tienen los modelos. Antes de mostrar Ogilvy Live a clientes o publicarlo, confirmar la licencia o reemplazarlos.

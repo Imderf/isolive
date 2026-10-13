@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html, useCursor } from '@react-three/drei'
 import { MathUtils, type Group } from 'three'
@@ -8,6 +8,7 @@ import { ruta, type Mapa } from '../sim/rutas'
 import { enHorario } from '../sim/horario'
 import { cambiar, useVisual, visual, type Paso, type Pose } from '../sim/visual'
 import { Box, RED, capaEtiquetas } from './parts'
+import { CuerpoRoblox } from './Avatar'
 
 const SLATE = '#2A303C', CARA = '#1F2430'
 const PIEL = ['#E9C4A6', '#C9946B', '#8D5A3B']
@@ -170,7 +171,7 @@ export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa, plan
       onPointerOver={e => { e.stopPropagation(); setHover(true) }}
       onPointerOut={() => setHover(false)}
     >
-      <Cuerpo camisa={camisa} piel={PIEL[i % 3]} pelo={PELO[(i * 2) % 3]} hip={hip} rod={rod} hom={hom} />
+      <Cuerpo camisa={camisa} piel={PIEL[i % 3]} pelo={PELO[(i * 2) % 3]} estilo={i % 3} hip={hip} rod={rod} hom={hom} />
       {caja && <Box p={[0, 0.98, -0.42]} s={[0.26, 0.2, 0.26]} c={caja} />}
       {(selected || enEtapa > 0) && (
         <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -198,8 +199,13 @@ export function Persona({ persona, puesto, i, mapa, sel, onSelect, enEtapa, plan
 type Pivote = React.RefObject<Group | null>
 // Cuerpo low-poly. Las caderas, rodillas y hombros son pivotes: se animan por ref (Persona)
 // o se dejan en una pose fija (visitantes sentados).
-export function Cuerpo({ camisa, piel, pelo, hip, rod, hom, pose }: {
-  camisa: string; piel: string; pelo: string
+// Avatar tipo Roblox (Avatar.tsx); mientras carga el modelo se ve la figura de bloques con los mismos pivotes.
+export function Cuerpo(props: Parameters<typeof CuerpoRoblox>[0]) {
+  return <Suspense fallback={<CuerpoBloques {...props} />}><CuerpoRoblox {...props} /></Suspense>
+}
+
+function CuerpoBloques({ camisa, piel, pelo, hip, rod, hom, pose }: {
+  camisa: string; piel: string; pelo: string; estilo?: number
   hip?: Pivote[]; rod?: Pivote[]; hom?: Pivote[]
   pose?: { cadera: number; rodilla: number; hombro: number }
 }) {
