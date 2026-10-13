@@ -10,7 +10,7 @@ Plan completo (11 pasos): nota del vault `ogilvy/tech-docs/ogilvy-live.md`. Resp
 - `server/` — Node 24 + Express, corre el `.ts` directo (sin compilar). Guarda la llave del TaskBoard y traduce cada plataforma al modelo común (`src/taskboard.ts`). Áreas en `server/areas/*.json` (proyecto, columnas de archivo, persona → perfil + puesto). En vivo (`src/vivo.ts`): sondea `/activity` cada 5 s; si hay actividad trae el estado fresco y empuja `evento` (enriquecido) y `estado` por SSE (`/api/areas/:id/eventos`); refresca el estado cada 60 s y `/api/areas/:id` sirve la caché. Login, roles y filtro de privacidad llegan en el ciclo 5.
 - `web/src/areas/*.ts` — disposición 3D de cada área (estaciones, etapas, puestos, bandejas).
 - Áreas del desplegable: `web/src/areas/index.ts` (la elegida queda en `?area=`). Servidor: un `server/areas/*.json` por área; un área sin personas no se sirve y el web la muestra con datos de prueba.
-- **Mesa Demo** (`mesa-demo`): lee el proyecto "Mesa Demo" del TaskBoard (cliente Ogilvy en el management; personas y piezas inventadas, sin marcas de clientes) y siempre está en horario. La actividad continua la genera un motor demo dentro del management (rama `ogilvy-live`, `server/src/lib/demo.ts`, pendiente de aprobación). Las cuentas demo las crea Imderf con correos `digital.colombia+<perfil>N@ogilvy.com`.
+- **Mesa Demo** (`mesa-demo`): lee el proyecto "Mesa Demo" del management (cliente "Cliente Demo"; personas y piezas inventadas, sin marcas de clientes) y siempre está en horario. La actividad la genera el motor demo del management (`server/src/lib/demo.ts`, variable `DEMO_PROJECT_ID`): cada 20–50 s comenta, mueve, crea señales y se pasa piezas por asignación o mención, sin notificaciones. Las 14 personas son perfiles sin acceso (`@mesa-demo.invalid`, no pueden iniciar sesión) creados con `server/scripts/mesa-demo.mjs` del management; el perfil sale del cargo. `server/areas/mesa-demo.json` tiene sus ids de producción.
 - `docs/areas/` — una ficha por área. `docs/referencias/` — WareTrack, Gather, Naos.
 
 ## Modelo común (`web/src/model.ts`)
@@ -46,7 +46,7 @@ Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogi
 
 ## Comandos
 
-- Desarrollo con datos reales: API del management en el worktree `~/Downloads/Ogilvy/management/repo-live` (rama `ogilvy-live`, puerto 4001, copia de producción `dev.db`) → `cd server && npm run dev` (4100) → `cd web && npm run dev` (5180, `/api` va a 4100). Configs `taskboard-live-api`, `ogilvy-live-server`, `ogilvy-live` en el `.claude/launch.json` del vault.
+- Desarrollo: `server/.env` apunta al management de producción (`/api/live` con su llave) → `cd server && npm run dev` (4100) → `cd web && npm run dev` (5180, `/api` va a 4100). Para trabajar contra la copia local (`dev.db` en el worktree `~/Downloads/Ogilvy/management/repo-live`, puerto 4001) restaurar `../env-dev-local.bak` como `server/.env`. Configs `taskboard-live-api`, `ogilvy-live-server`, `ogilvy-live` en el `.claude/launch.json` del vault.
 - Sin el servidor, el web cae a datos de prueba con simulador.
 - `server/.env` (no se versiona): `PORT`, `TASKBOARD_URL`, `TASKBOARD_TOKEN`. Nunca mostrarlo.
 - `cd server && npm run check` — chequeo del conector; `npx tsc --noEmit` — tipos.
@@ -64,7 +64,7 @@ Dirección elegida por Imderf (2026-10-09): **look WareTrack** con el **rojo Ogi
   - `web/src/sim/coreografia.ts`: evento → órdenes (llevar pieza, ir al Kanban, burbuja). Las órdenes mandan sobre la vida de oficina (`scene/Persona.tsx`).
   - Simulador activo solo con datos de prueba (`App.tsx`), un evento cada 12–22 s.
 - Ciclo 3 (conector TaskBoard): hecho 2026-10-09 en local contra la copia de producción.
-  - Management, rama `ogilvy-live` (worktree): `GET /api/live/projects/:id/state` y `/activity?since=`, con llave `LIVE_TOKEN` (Bearer, comparación en tiempo constante), solo proyectos de `LIVE_PROJECTS`, 60 consultas/min. Sin llave responden 404. No devuelven descripciones, comentarios, adjuntos ni correos. **No está desplegado.**
+  - Management, rama `ogilvy-live` (worktree): `GET /api/live/projects/:id/state` y `/activity?since=`, con llave `LIVE_TOKEN` (Bearer, comparación en tiempo constante), solo proyectos de `LIVE_PROJECTS`, 60 consultas/min. Sin llave responden 404. No devuelven descripciones, adjuntos ni correos. Desplegado en producción el 2026-10-13 (con el campo de cargo y el motor de la Mesa Demo).
   - Piezas sin responsable de la mesa (13 de 45 en Social First) esperan en la bandeja de su estación.
   - Comentarios: ruta `/api/live/projects/:id/comments?since=` (7 días por defecto); el servidor los cruza con `comment.added` (misma tarjeta y autor, ±10 s).
   - Vista del tablero completo (clic en el muro Kanban) y vista por etapa (quién trabaja en ella, con aro y conteo en la escena).

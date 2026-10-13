@@ -1,6 +1,84 @@
 {
   "id": "mesa-demo",
-  "conector": { "tipo": "taskboard", "proyecto": "cmv61irt0000ks6klb6v3lpw4" },
-  "archivo": ["Finalizado", "No Aprobado", "Freezing"],
-  "personas": []
+  "conector": {
+    "tipo": "taskboard",
+    "proyecto": "cmv61irt0000ks6klb6v3lpw4"
+  },
+  "archivo": [
+    "Finalizado",
+    "No Aprobado",
+    "Freezing"
+  ],
+  "personas": [
+    {
+      "id": "cmv62lol20001s6k5bfzk9t0v",
+      "perfil": "coordinacion",
+      "puesto": "k1"
+    },
+    {
+      "id": "cmv62lolb0007s6k5347ovnfy",
+      "perfil": "coordinacion",
+      "puesto": "k2"
+    },
+    {
+      "id": "cmv62lolh000ds6k5l1ytvp77",
+      "perfil": "estrategia",
+      "puesto": "e1"
+    },
+    {
+      "id": "cmv62lolo000js6k5wln2zclp",
+      "perfil": "estrategia",
+      "puesto": "e2"
+    },
+    {
+      "id": "cmv62lolt000ps6k51l9vw10l",
+      "perfil": "diseno",
+      "puesto": "c1"
+    },
+    {
+      "id": "cmv62lolz000vs6k5tsx071hx",
+      "perfil": "diseno",
+      "puesto": "c2"
+    },
+    {
+      "id": "cmv62lom40011s6k53a01ozjt",
+      "perfil": "copy",
+      "puesto": "c3"
+    },
+    {
+      "id": "cmv62lom90017s6k53q4px8el",
+      "perfil": "social",
+      "puesto": "s1"
+    },
+    {
+      "id": "cmv62lomd001ds6k5pzdjod10",
+      "perfil": "social",
+      "puesto": "s2"
+    },
+    {
+      "id": "cmv62lomi001js6k50ucu1y62",
+      "perfil": "social",
+      "puesto": "s3"
+    },
+    {
+      "id": "cmv62lomo001ps6k54kr1yp1b",
+      "perfil": "social",
+      "puesto": "s4"
+    },
+    {
+      "id": "cmv62lomt001vs6k5hh477bmu",
+      "perfil": "data",
+      "puesto": "d1"
+    },
+    {
+      "id": "cmv62lomy0021s6k5uohjrjim",
+      "perfil": "data",
+      "puesto": "d2"
+    },
+    {
+      "id": "cmv62lon50027s6k5rqmexwy3",
+      "perfil": "data",
+      "puesto": "d3"
+    }
+  ]
 }
