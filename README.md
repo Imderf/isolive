@@ -239,4 +239,4 @@ Sin base de datos propia: el estado vive en la plataforma fuente y en la caché 
 
 Idea y dirección: **Imderf Ríos**. Desarrollado con Claude Code.
 
-Repositorio privado. Todos los derechos reservados.
+Código público para consulta, sin licencia de uso: todos los derechos reservados. Para usarlo o adaptarlo, escribe al autor.
